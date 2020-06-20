@@ -2,11 +2,8 @@
 Restores the default retail layout of action bars, bag buttons and micro buttons, with modifications made to the bag/micro bar to accommodate for the key ring and number of micro buttons.
 
 ![](images/1.jpg)
-
 ![](images/2.jpg)
-
 ![](images/3.jpg)
-
 ![](images/4.jpg)
 
 ## Know issues
