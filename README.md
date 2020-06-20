@@ -10,4 +10,4 @@ Restores the default retail layout of action bars, bag buttons and micro buttons
 ![](images/4.jpg)
 
 ## Know issues
-Due to the WoW API being restricted while in combat, interface options affecting action bars and toggling of showing reputation as the experience bar, are disabled until leaving combat. The 6 buttons of the bottom right action bar background grid cannot be updated while in commbat either, so when always showing the grid it cannot be hidden if in combat.
+Due to the WoW API being restricted while in combat, interface options affecting action bars and toggling of showing reputation as the experience bar, are disabled until leaving combat. The background grid of the bottom right action bar buttons cannot be updated while in combat either.
