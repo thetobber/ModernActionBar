@@ -2,7 +2,7 @@
 ## Author: Tobias
 ## Version: 1.0.0
 ## Title: ModernActionBarsClassic
-## Notes: Restores the default retail layout of action bars, bag buttons and micro buttons, with small modifications.
+## Notes: Restores the default retail layout of action bars, bag buttons and micro buttons, with minor modifications.
 ## DefaultState: enabled
 
 ModernActionBarsClassic.lua
