@@ -1,5 +1,5 @@
-package-as: ModernActionBarsClassic
+package-as: ModernActionBar
 ignore:
-  - Images
+  - images
   - MainMenuBar.afphoto
   - MainMenuBar.png
