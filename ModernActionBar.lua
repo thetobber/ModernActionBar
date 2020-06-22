@@ -128,23 +128,19 @@ local function toggleOptionButtons()
     end
 end
 
+local function setActionButtonAlpha(buttonName, alpha)
+    _G[buttonName.."NormalTexture"]:SetAlpha(alpha)
+    _G[buttonName.."HotKey"]:SetAlpha(alpha)
+    _G[buttonName.."Count"]:SetAlpha(alpha)
+    _G[buttonName.."Name"]:SetAlpha(alpha)
+    _G[buttonName.."Cooldown"]:SetAlpha(alpha)
+end
+
 local function setBottomRightGridVisibility(show)
-    if InCombatLockdown() then
-        return
-    end
-
-    if show then
-        for index = 1, 6 do
-            _G["MultiBarBottomRightButton"..index]:Show()
-        end
-    else
-        for index = 1, 6 do
-            local button = _G["MultiBarBottomRightButton"..index]
-
-            if not button.eventsRegistered then
-                button:Hide()
-            end
-        end
+    -- Have to use alpha of button due to combat lockdown restriction
+    for index = 1, 6 do
+        local buttonName = "MultiBarBottomRightButton"..index
+        setActionButtonAlpha(buttonName, show and 1 or (_G[buttonName].eventsRegistered and 1 or 0))
     end
 end
 
@@ -212,14 +208,6 @@ local function applyLayoutBase()
 end
 
 local function applyLayoutSmall()
-    --[[
-    bar small
-    0, 0.5390625, 0.70703125, 0.8984375
-
-    xp small
-    0, 0.5390625, 0.9375, 1
-    ]]
-
     if InCombatLockdown() then
         return
     end
@@ -238,14 +226,6 @@ local function applyLayoutSmall()
 end
 
 local function applyLayoutLarge()
-    --[[
-    bar large
-    0, 0.787109375, 0, 0.19140625
-
-    xp large
-    0, 0.787109375, 0.23046875, 0.29296875
-    ]]
-
     if InCombatLockdown() then
         return
     end
@@ -334,6 +314,7 @@ local function updatePetBar()
 end
 
 hiddenFrame:SetScript("OnEvent", function(self, event, ...)
+    -- ACTIONBAR_SHOWGRID/ACTIONBAR_HIDEGRID are dispatched when an ability is being dragged/dropped
     if event == "ACTIONBAR_SHOWGRID" then
         setBottomRightGridVisibility(true)
     elseif event == "ACTIONBAR_HIDEGRID" then
@@ -343,11 +324,29 @@ hiddenFrame:SetScript("OnEvent", function(self, event, ...)
     end
 end)
 
-hooksecurefunc("MultiActionBar_Update", updateActionBars)
+-- Show the button again when receiving an ability dragged on to it
+for index, button in ipairs({
+    MultiBarBottomRightButton1,
+    MultiBarBottomRightButton2,
+    MultiBarBottomRightButton3,
+    MultiBarBottomRightButton4,
+    MultiBarBottomRightButton5,
+    MultiBarBottomRightButton6
+}) do
+    button:HookScript("OnReceiveDrag", function(self)
+        setActionButtonAlpha(self:GetName(), 1)
+    end)
+end
+
+-- Happens when toggling "Always Show ActionBars" in interface options
+hooksecurefunc("MultiActionBar_UpdateGridVisibility", function()
+    setBottomRightGridVisibility(false)
+end)
+
+hooksecurefunc("SetActionBarToggles", updateActionBars)
 hooksecurefunc("PetActionBar_UpdatePositionValues", updatePetBar)
 hooksecurefunc("MainMenuBar_UpdateExperienceBars", updateWatchBars)
 hooksecurefunc("InterfaceOptionsOptionsFrame_RefreshCategories", toggleOptionButtons)
 
 removeUnusedFrames()
 applyLayoutBase()
-setBottomRightGridVisibility(false)
