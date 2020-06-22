@@ -1,2 +1,2 @@
-1.0.0-release
-initital release
+1.0.1-release
+updated packaging

@@ -1,6 +1,7 @@
 package-as: ModernActionBar
 manual-changelog: CHANGELOG.txt
 ignore:
-  - images
-  - MainMenuBar.afphoto
-  - MainMenuBar.png
+ - images
+ - README.md
+ - Texture.afphoto
+ - Texture.png
