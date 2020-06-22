@@ -1,4 +1,5 @@
 package-as: ModernActionBar
+manual-changelog: CHANGELOG.txt
 ignore:
   - images
   - MainMenuBar.afphoto
