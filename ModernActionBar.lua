@@ -2,7 +2,7 @@ UIPARENT_MANAGED_FRAME_POSITIONS["MultiBarBottomLeft"] = nil
 UIPARENT_MANAGED_FRAME_POSITIONS["StanceBarFrame"] = nil
 UIPARENT_MANAGED_FRAME_POSITIONS["PETACTIONBAR_YPOS"] = nil
 
-local consoleTexturePath = "Interface\\AddOns\\ModernActionBarsClassic\\MainMenuBar.tga"
+local consoleTexturePath = "Interface\\AddOns\\ModernActionBar\\Texture.tga"
 
 local unusedFrames = {
     MainMenuXPBarTexture1,

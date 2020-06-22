@@ -1,6 +1,5 @@
 package-as: ModernActionBarsClassic
-enable-nolib-creation: no
 ignore:
-  - images
+  - Images
   - MainMenuBar.afphoto
   - MainMenuBar.png
