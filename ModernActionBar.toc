@@ -1,6 +1,6 @@
-## Interface: 11304
+## Interface: 11305
 ## Author: Tobias
-## Version: 1.0.1
+## Version: 1.0.2
 ## Title: ModernActionBar
 ## Notes: Restores the default retail layout of action bars, bag buttons and micro buttons, with minor modifications.
 ## DefaultState: enabled
