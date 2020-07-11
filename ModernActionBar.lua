@@ -54,7 +54,7 @@ end
 
 local bagAndMicroFrame
 do
-    bagAndMicroFrame = CreateFrame("Frame", nil, UIParent)
+    bagAndMicroFrame = CreateFrame("Frame", "ModernActionBarBags", UIParent)
     bagAndMicroFrame:SetSize(224, 89)
     bagAndMicroFrame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT")
     bagAndMicroFrame.Texture = bagAndMicroFrame:CreateTexture(nil, "BACKGROUND")
