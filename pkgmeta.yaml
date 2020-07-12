@@ -1,6 +1,7 @@
 package-as: ModernActionBar
 manual-changelog: CHANGELOG.txt
+enable-nolib-creation: no
 ignore:
  - README.md
- - Texture.afphoto
- - Texture.png
+ - Media/Textures/Console.afphoto
+ - Media/Textures/Console.png
