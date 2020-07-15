@@ -1,12 +1,16 @@
 local AddonName = ...
 
--- local AceAddon = LibStub('AceAddon-3.0')
--- local AceDB = LibStub('AceDB-3.0')
--- local AceConfig = LibStub('AceConfig-3.0')
--- local AceConfigDialog = LibStub('AceConfigDialog-3.0')
+ModernActionBar = LibStub('AceAddon-3.0'):NewAddon(AddonName, 'AceConsole-3.0')
 
-local defaults = {
+ModernActionBar.ActionBars = ModernActionBar:NewModule('ActionBars', 'AceHook-3.0', 'AceEvent-3.0')
+ModernActionBar.BagAndMicroBar = ModernActionBar:NewModule('BagAndMicroBar', 'AceHook-3.0', 'AceEvent-3.0')
+
+ModernActionBar.defaultOptions = {
     char = {
+        general = {
+            layout = 'retail' -- retail | classic | stacked | line
+        },
+
         visibility = {
             showBars = true,
             showGryphons = true
@@ -18,8 +22,8 @@ local defaults = {
     }
 }
 
-local options = {
-    name = 'ModernActionBar',
+ModernActionBar.optionsTree = {
+    name = AddonName,
     handler = ModernActionBar,
     type = 'group',
     args = {
@@ -101,22 +105,16 @@ local options = {
     }
 }
 
-ModernActionBar = LibStub('AceAddon-3.0'):NewAddon(AddonName, 'AceConsole-3.0', 'AceEvent-3.0', 'AceHook-3.0')
-ModernActionBar.ActionBars = ModernActionBar:NewModule('ActionBars', 'AceConsole-3.0', 'AceHook-3.0', 'AceEvent-3.0')
-ModernActionBar.BagAndMicroBar = ModernActionBar:NewModule('BagAndMicroBar', 'AceHook-3.0', 'AceEvent-3.0')
-
 function ModernActionBar:OnInitialize()
-    self.db = LibStub('AceDB-3.0'):New(AddonName..'DB', defaults, true)
+    self.db = LibStub('AceDB-3.0'):New(AddonName..'DB', self.defaultOptions, true)
 
-    LibStub('AceConfig-3.0'):RegisterOptionsTable(AddonName, options, nil)
-    self.options = LibStub('AceConfigDialog-3.0'):AddToBlizOptions(AddonName, AddonName..' '..GetAddOnMetadata(AddonName, 'Version'))
+    LibStub('AceConfig-3.0'):RegisterOptionsTable(AddonName, self.optionsTree, nil)
+    self.optionsFrame = LibStub('AceConfigDialog-3.0'):AddToBlizOptions(AddonName, AddonName..' '..GetAddOnMetadata(AddonName, 'Version'))
 
-    -- self:NewModule('ActionBars', 'AceHook-3.0', 'AceEvent-3.0')
-
-    self:RegisterChatCommand('mab', 'OpenOptions')
-    self:RegisterChatCommand('modernactionbar', 'OpenOptions')
+    self:RegisterChatCommand('mab', 'OpenOptionsFrame')
+    self:RegisterChatCommand('modernactionbar', 'OpenOptionsFrame')
 end
 
-function ModernActionBar:OpenOptions()
-    InterfaceOptionsFrame_OpenToCategory(self.options)
+function ModernActionBar:OpenOptionsFrame()
+    InterfaceOptionsFrame_OpenToCategory(self.optionsFrame)
 end

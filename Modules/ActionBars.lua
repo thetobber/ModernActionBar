@@ -1,5 +1,210 @@
 local ActionBars = ModernActionBar:GetModule('ActionBars')
 
+
+local retail = {
+    {
+        enabled = true,
+        reference = _G["MainMenuBar"],
+        points = {
+            { anchor = "" }
+        },
+    },
+    {
+        enabled = true,
+        reference = _G["MultiBarBottomRight"],
+        width = 261
+        points = {
+            { anchor = "" }
+        },
+    },
+    {
+        enabled = true,
+        reference = _G["MultiBarBottomRightButton1FloatingBG"],
+        texture = nil
+    },
+    {
+        enabled = true,
+        reference = _G["MultiBarBottomRightButton2FloatingBG"],
+        texture = nil
+    },
+    {
+        enabled = true,
+        reference = _G["MultiBarBottomRightButton3FloatingBG"],
+        texture = nil
+    },
+    {
+        enabled = true,
+        reference = _G["MultiBarBottomRightButton4FloatingBG"],
+        texture = nil
+    },
+    {
+        enabled = true,
+        reference = _G["MultiBarBottomRightButton5FloatingBG"],
+        texture = nil
+    },
+    {
+        enabled = true,
+        reference = _G["MultiBarBottomRightButton6FloatingBG"],
+        texture = nil
+    },
+    {
+        enabled = true,
+        reference = _G["MultiBarBottomRightButton7"],
+        points = {
+            { anchor = "BOTTOMLEFT", relativeTo = _G["MultiBarBottomRightButton1"], "TOPLEFT", 0, 16 }
+        }
+    },
+    {
+        enabled = true,
+        reference = _G["MultiBarBottomRightButton8"],
+        points = {
+            { anchor = "LEFT", relativeTo = _G["MultiBarBottomRightButton7"], "RIGHT", 6, 0 }
+        }
+    },
+    {
+        enabled = true,
+        reference = _G["MultiBarBottomRightButton9"],
+        points = {
+            { anchor = "LEFT", relativeTo = _G["MultiBarBottomRightButton8"], "RIGHT", 6, 0 }
+        }
+    },
+    {
+        enabled = true,
+        reference = _G["MultiBarBottomRightButton10"],
+        points = {
+            { anchor = "LEFT", relativeTo = _G["MultiBarBottomRightButton9"], "RIGHT", 6, 0 }
+        }
+    },
+    {
+        enabled = true,
+        reference = _G["MultiBarBottomRightButton11"],
+        points = {
+            { anchor = "LEFT", relativeTo = _G["MultiBarBottomRightButton10"], "RIGHT", 6, 0 }
+        }
+    },
+    {
+        enabled = true,
+        reference = _G["MultiBarBottomRightButton12"],
+        points = {
+            { anchor = "LEFT", relativeTo = _G["MultiBarBottomRightButton11"], "RIGHT", 6, 0 }
+        }
+    },
+    {
+        enabled = true,
+        reference = _G["MainMenuBarTexture0"],
+        points = {
+            { anchor = "TOPLEFT", relativeTo = _G["MainMenuBarArtFrame"], "TOPLEFT" },
+            { anchor = "BOTTOMRIGHT", relativeTo = _G["MainMenuBarArtFrame"], "BOTTOMRIGHT" }
+        },
+        texture = "Interface\\AddOns\\ModernActionBar\\Media\\Textures\\Console.tga"
+    },
+    {
+        enabled = true,
+        reference = _G["MainMenuXPBarTexture0"],
+        points = {
+            { anchor = "TOPLEFT", relativeTo = _G["MainMenuExpBar"], "TOPLEFT" },
+            { anchor = "BOTTOMRIGHT", relativeTo = _G["MainMenuExpBar"], "BOTTOMRIGHT" }
+        },
+        texture = "Interface\\AddOns\\ModernActionBar\\Media\\Textures\\Console.tga"
+    },
+    {
+        enabled = true,
+        reference = _G["ActionBarUpButton"],
+        points = {
+            { anchor = "TOPLEFT", relativeTo = _G["MainMenuBarArtFrame"], "TOPLEFT", 506, -2 }
+        }
+    },
+    {
+        enabled = true,
+        reference = _G["ActionBarDownButton"],
+        points = {
+            { anchor = "BOTTOMLEFT", relativeTo = _G["MainMenuBarArtFrame"], "BOTTOMLEFT", 506, -4 }
+        }
+    },
+    {
+        enabled = true,
+        reference = _G["MainMenuBarPageNumber"],
+        points = {
+            { anchor = "LEFT", relativeTo = _G["MainMenuBarArtFrame"], "LEFT", 538, -3 }
+        }
+    },
+    {
+        enabled = true,
+        reference = _G["ReputationWatchBar"].StatusBar.WatchBarTexture0,
+        points = {
+            { anchor = "TOPLEFT", relativeTo = _G["ReputationWatchBar"].StatusBar, "TOPLEFT" },
+            { anchor = "BOTTOMRIGHT", relativeTo = _G["ReputationWatchBar"].StatusBar, "BOTTOMRIGHT" },
+        },
+        texture = "Interface\\AddOns\\ModernActionBar\\Media\\Textures\\Console.tga"
+    },
+    {
+        enabled = true,
+        reference = _G["ReputationWatchBar"].StatusBar.XPBarTexture0,
+        points = {
+            { anchor = "TOPLEFT", relativeTo = _G["ReputationWatchBar"].StatusBar, "TOPLEFT" },
+            { anchor = "BOTTOMRIGHT", relativeTo = _G["ReputationWatchBar"].StatusBar, "BOTTOMRIGHT" },
+        },
+        texture = "Interface\\AddOns\\ModernActionBar\\Media\\Textures\\Console.tga"
+    },
+    {
+        enabled = false,
+        reference = _G[MainMenuXPBarTexture1]
+    },
+    {
+        enabled = false,
+        reference = _G[MainMenuXPBarTexture2]
+    },
+    {
+        enabled = false,
+        reference = _G[MainMenuXPBarTexture3]
+    },
+    {
+        enabled = false,
+        reference = _G[MainMenuBarTexture1]
+    },
+    {
+        enabled = false,
+        reference = _G[MainMenuBarTexture2]
+    },
+    {
+        enabled = false,
+        reference = _G[MainMenuBarTexture3]
+    },
+    {
+        enabled = false,
+        reference = _G[ReputationWatchBar].StatusBar.WatchBarTexture1
+    },
+    {
+        enabled = false,
+        reference = _G[ReputationWatchBar].StatusBar.WatchBarTexture2
+    },
+    {
+        enabled = false,
+        reference = _G[ReputationWatchBar].StatusBar.WatchBarTexture3
+    },
+    {
+        enabled = false,
+        reference = _G[ReputationWatchBar].StatusBar.XPBarTexture1
+    },
+    {
+        enabled = false,
+        reference = _G[ReputationWatchBar].StatusBar.XPBarTexture2
+    },
+    {
+        enabled = false,
+        reference = _G[ReputationWatchBar].StatusBar.XPBarTexture3
+    },
+    {
+        enabled = false,
+        reference = _G[MainMenuBarPerformanceBarFrame]
+    },
+    {
+        enabled = false,
+        reference = _G[MainMenuBarMaxLevelBar]
+    }
+}
+
+
 function ActionBars:OnInitialize()
     self.db = ModernActionBar.db
 

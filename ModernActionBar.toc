@@ -6,7 +6,6 @@
 ## DefaultState: enabled
 ## SavedVariables: ModernActionBarDB
 
-Developer\Load_Developer.xml
 Libraries\Load_Libraries.xml
 ModernActionBar.lua
 Modules\Load_Modules.xml
