@@ -1,2 +1,2 @@
-1.0.1-release
-updated packaging
+1.0.3-release
+free bag slot count text added (shown by running '/run SetCVar("displayFreeBagSlots", "1")')

@@ -348,5 +348,11 @@ hooksecurefunc("PetActionBar_UpdatePositionValues", updatePetBar)
 hooksecurefunc("MainMenuBar_UpdateExperienceBars", updateWatchBars)
 hooksecurefunc("InterfaceOptionsOptionsFrame_RefreshCategories", toggleOptionButtons)
 
+-- /run SetCVar("displayFreeBagSlots", "1")
+MainMenuBarBackpackButtonCount:SetText(string.format("(%s)", CalculateTotalNumberOfFreeBagSlots()))
+hooksecurefunc("MainMenuBarBackpackButton_UpdateFreeSlots", function()
+    MainMenuBarBackpackButtonCount:SetText(string.format("(%s)", MainMenuBarBackpackButton.freeSlots))
+end)
+
 removeUnusedFrames()
 applyLayoutBase()
