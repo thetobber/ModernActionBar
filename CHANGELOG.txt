@@ -1,2 +1,5 @@
-1.0.3-release
-free bag slot count text added (shown by running '/run SetCVar("displayFreeBagSlots", "1")')
+1.0.4
+restructured code
+added upscaled art textures
+fixed rep. bar positioning on rep. gain
+fixed max level textures showing some times
