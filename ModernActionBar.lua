@@ -1,8 +1,26 @@
 local N, T = select(1, ...), 'Interface\\AddOns\\ModernActionBar\\Console.tga'
 
 UIPARENT_MANAGED_FRAME_POSITIONS['MultiBarBottomLeft'] = nil
-UIPARENT_MANAGED_FRAME_POSITIONS['StanceBarFrame'] = nil
-UIPARENT_MANAGED_FRAME_POSITIONS['PETACTIONBAR_YPOS'] = nil
+
+UIPARENT_MANAGED_FRAME_POSITIONS['PETACTIONBAR_YPOS'] = {
+    baseY = 98,
+    bottomLeft = 46,
+    justBottomRightAndStance = 46,
+    watchBar = 0,
+    maxLevel = 0,
+    isVar = 'yAxis',
+}
+
+UIPARENT_MANAGED_FRAME_POSITIONS['StanceBarFrame'] = {
+    baseY = -2,
+    bottomLeft = 46,
+    watchBar = 0,
+    maxLevel = 0,
+    anchorTo = 'MainMenuBar',
+    point = 'BOTTOMLEFT',
+    rpoint = 'TOPLEFT',
+    xOffset = 30,
+}
 
 local function emptyFunc() end
 
@@ -60,6 +78,11 @@ local unusedTextures = {
     MultiBarBottomRightButton4FloatingBG,
     MultiBarBottomRightButton5FloatingBG,
     MultiBarBottomRightButton6FloatingBG,
+    StanceBarLeft,
+    StanceBarMiddle,
+    StanceBarRight,
+    SlidingActionBarTexture0,
+    SlidingActionBarTexture1,
 }
 
 local optionButtons = {
@@ -79,6 +102,18 @@ f1:RegisterEvent('ACTIONBAR_SHOWGRID')
 f1:RegisterEvent('ACTIONBAR_HIDEGRID')
 f1:RegisterEvent('PLAYER_REGEN_ENABLED')
 f1:RegisterEvent('PLAYER_REGEN_DISABLED')
+
+local function f1_fixStanceBtn(btn, xOffset, yOffset)
+    local texture = btn:GetNormalTexture()
+
+    btn:SetSize(30, 30)
+    btn:ClearAllPoints()
+    btn:SetPoint('LEFT', xOffset, yOffset)
+
+    texture:ClearAllPoints()
+    texture:SetPoint('TOPLEFT', btn, 'TOPLEFT', -10, 10)
+    texture:SetPoint('BOTTOMRIGHT', btn, 'BOTTOMRIGHT', 10, -10)
+end
 
 local function f1_setBtnVisible(name, visible)
     local alpha = 0
@@ -143,16 +178,6 @@ local function f1_updateActionBars()
         return
     end
 
-    if StanceBarFrame:IsShown() then
-        StanceBarFrame:ClearAllPoints()
-
-        if SHOW_MULTI_ACTIONBAR_1 then
-            StanceBarFrame:_SetPoint('BOTTOMLEFT', MultiBarBottomLeftButton1, 'TOPLEFT', 30, 6)
-        else
-            StanceBarFrame:_SetPoint('BOTTOMLEFT', ActionButton1, 'TOPLEFT', 30, 9)
-        end
-    end
-
     if SHOW_MULTI_ACTIONBAR_2 then
         f1_useLargeMainMenuBar()
     else
@@ -183,22 +208,6 @@ local function f1_updateWatchBars()
     end
 end
 
-local function f1_updatePetBar()
-    if InCombatLockdown() then
-        return
-    end
-
-    if PetActionBarFrame:IsShown() then
-        PetActionBarFrame:ClearAllPoints()
-
-        if SHOW_MULTI_ACTIONBAR_1 then
-            PetActionBarFrame:_SetPoint('BOTTOMLEFT', MultiBarBottomLeftButton1, 'TOPLEFT', 30, 6)
-        else
-            PetActionBarFrame:_SetPoint('BOTTOMLEFT', ActionButton1, 'TOPLEFT', 30, 9)
-        end
-    end
-end
-
 local function f1_onAddonLoaded(self, addonName)
     if addonName == N then
         ReputationWatchBar._SetPoint = ReputationWatchBar.SetPoint
@@ -212,15 +221,8 @@ local function f1_onAddonLoaded(self, addonName)
             self.StatusBar:SetAllPoints()
         end
 
-        StanceBarFrame._SetPoint = StanceBarFrame.SetPoint
-        StanceBarFrame.SetPoint = emptyFunc
-
-        PetActionBarFrame._SetPoint = PetActionBarFrame.SetPoint
-        PetActionBarFrame.SetPoint = emptyFunc
-
         hooksecurefunc('SetActionBarToggles', f1_updateActionBars)
         hooksecurefunc('MainMenuBar_UpdateExperienceBars', f1_updateWatchBars)
-        hooksecurefunc('PetActionBar_UpdatePositionValues', f1_updatePetBar)
         hooksecurefunc('InterfaceOptionsOptionsFrame_RefreshCategories', function()
             if InCombatLockdown() then
                 f1_disableOptionButtons()
@@ -233,7 +235,6 @@ end
 
 local function f1_onPlayerEnteringWorld(isLogin, isReload)
     if isLogin or isReload then
-        -- remove unused frames and textures
         for _, frame in ipairs(unusedFrames) do
             removeFrame(frame)
         end
@@ -282,22 +283,17 @@ local function f1_onPlayerEnteringWorld(isLogin, isReload)
         end
         f1_setBtnGridVisible(false)
 
-        MultiBarLeft:SetSize(36, 498)
         for i = 1, 12 do
-            local btn = _G['MultiBarLeftButton'..i]
-
-            btn:ClearAllPoints()
-            btn:SetSize(36, 36)
-            btn:SetPoint('TOP', 0, -((i - 1) * 42))
+            _G['MultiBarLeftButton'..i]:SetSize(36, 36)
+            _G['MultiBarRightButton'..i]:SetSize(36, 36)
         end
 
-        MultiBarRight:SetSize(36, 498)
-        for i = 1, 12 do
-            local btn = _G['MultiBarRightButton'..i]
-
-            btn:ClearAllPoints()
-            btn:SetSize(36, 36)
-            btn:SetPoint('TOP', 0, -((i - 1) * 42))
+        StanceBarFrame:SetSize(30, 30)
+        PetActionBarFrame:SetSize(30, 30)
+        for i = 1, 10 do
+            local xOffset = (i - 1) * 34
+            f1_fixStanceBtn(_G['StanceButton'..i], xOffset, 0)
+            f1_fixStanceBtn(_G['PetActionButton'..i], xOffset, 0)
         end
 
         MainMenuBarLeftEndCap:ClearAllPoints()
@@ -332,6 +328,7 @@ local function f1_onPlayerEnteringWorld(isLogin, isReload)
         MainMenuBarPageNumber:ClearAllPoints()
         MainMenuBarPageNumber:SetPoint('LEFT', MainMenuBar, 'LEFT', 534, 3)
 
+        UIParent_ManageFramePositions()
         f1_updateActionBars()
         f1_updateWatchBars()
     end
