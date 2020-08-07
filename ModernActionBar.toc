@@ -1,8 +1,8 @@
 ## Interface: 11305
 ## Author: Tobias
-## Version: 2.0.0
-## Title: ModernActionBar
-## Notes: Restores the default retail layout of action bars, bag buttons and micro buttons, with minor modifications.
+## Version: 2.0.0-alpha
+## Title: |cfffc7703ModernActionBar|r |cffcccccc2.0.0-alpha|r
+## Notes: An action bar replacement that mimics the retail layout.
 ## DefaultState: enabled
 ## SavedVariables: ModernActionBarDB
 

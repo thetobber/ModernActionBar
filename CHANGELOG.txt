@@ -1,1 +1,6 @@
-2.0.0-release
+2.0.0-alpha
+Addon now structured with Ace3 and use multiple Ace3 libraries.
+Created separate custom textures for the micro and bag bar.
+Separated micro and bag bar into their own frames.
+Created and added options for the addon.
+Added micro and bag bar enabled, mouse over and position options.

@@ -3,5 +3,7 @@ manual-changelog: CHANGELOG.txt
 enable-nolib-creation: no
 ignore:
  - README.md
- - Media/Textures/Console.afphoto
- - Media/Textures/Console.png
+ - Textures/Console.afphoto
+ - Textures/Console.afdesign
+ - Textures/Console.png
+ - Textures/Gryphon.afphoto
