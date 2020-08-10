@@ -9,8 +9,11 @@
     <Include file="Libraries\Ace3\AceGUI-3.0\AceGUI-3.0.xml"/>
     <Include file="Libraries\Ace3\AceConfig-3.0\AceConfig-3.0.xml"/>
     <Include file="Libraries\Ace3\AceDBOptions-3.0\AceDBOptions-3.0.xml"/>
+
     <Script file="ModernActionBar.lua"/>
     <Script file="Modules\ActionBar.lua"/>
     <Script file="Modules\MicroBar.lua"/>
     <Script file="Modules\BagBar.lua"/>
+    <Script file="Modules\StanceBar.lua"/>
+    <Script file="Modules\PetBar.lua"/>
 </Ui>

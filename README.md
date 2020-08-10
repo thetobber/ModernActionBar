@@ -1,5 +1,17 @@
 # ModernActionBar
-Restores the default retail layout of action bars, bag buttons and micro buttons, with modifications made to the bag/micro bar to accommodate for the key ring and number of micro buttons.
+Newer version in development.
 
-## Known issues
-Due to the WoW API being restricted while in combat, interface options affecting action bars and toggling of showing reputation as the experience bar, are disabled until leaving combat.
+## TODO
+(Think I fixed this) Fix taint due to some sort of pet action button visibility:
+```
+8/10 19:37:09.535  Interface\FrameXML\PetActionBarFrame.lua:211 PetActionBar_Update()
+8/10 19:37:09.535  An action was blocked in combat because of taint from ModernActionBar - PetActionButton10:Show()
+8/10 19:37:09.535      Interface\FrameXML\PetActionBarFrame.lua:198 PetActionBar_Update()
+8/10 19:37:09.535      Interface\FrameXML\PetActionBarFrame.lua:89
+```
+
+Fix/update stance bar, pet bar and vehicle leave button positions.
+
+Make sure managed frames are still positioned correctly.
+
+Upscale up/down arrow, micro button, pet bar background and stance bar background textures

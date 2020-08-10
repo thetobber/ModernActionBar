@@ -1,67 +1,180 @@
-local N, S = ...
-local DISPLAY_NAME = '|cfffc7703'..N..'|r |cffcccccc'..GetAddOnMetadata(N, 'Version')..'|r'
+local NAME, _ = ...
 
-local SCREEN_WIDTH, SCREEN_HEIGHT =
-    floor(GetScreenWidth()),
-    floor(GetScreenHeight())
+local AceConfigDialog = LibStub('AceConfigDialog-3.0')
 
-local AceAddon, AceDB, AceConfig, AceConfigDialog =
-    LibStub('AceAddon-3.0'),
-    LibStub('AceDB-3.0'),
-    LibStub('AceConfig-3.0'),
-    LibStub('AceConfigDialog-3.0')
+local function EmptyFunc() end
 
-local A = AceAddon:NewAddon(N, 'AceConsole-3.0', 'AceHook-3.0', 'AceEvent-3.0')
-S.A = A
+local function RemoveFrame(self, frame)
+    frame:UnregisterAllEvents()
+    frame:SetScript('OnEvent', nil)
+    frame:SetScript('OnUpdate', nil)
+    frame:SetScript('OnShow', nil)
+    frame:SetScript('OnHide', nil)
+    frame:Hide()
+    frame.SetScript = EmptyFunc
+    frame.RegisterEvent = EmptyFunc
+    frame.RegisterAllEvents = EmptyFunc
+    frame.Show = EmptyFunc
+end
 
-A:NewModule('ActionBar', 'AceHook-3.0', 'AceEvent-3.0')
-A:NewModule('MicroBar', 'AceHook-3.0', 'AceEvent-3.0')
-A:NewModule('BagBar', 'AceHook-3.0', 'AceEvent-3.0')
+local function RemoveTexture(self, texture)
+    texture:SetTexture(nil)
+    texture:Hide()
+    texture.Show = EmptyFunc
+end
 
-local defaults = {
+local function UpdateButtonStyle(self, button)
+    if not button.styled then
+        local path = 'Interface\\AddOns\\'..NAME..'\\Textures\\'
+        local name = button:GetName()
+
+        button:SetNormalTexture(path..'Button\\UI-Quickslot2.tga')
+        button:SetPushedTexture(path..'Button\\UI-Quickslot-Depress.tga')
+        button:SetHighlightTexture(path..'Button\\ButtonHilight-Square.tga')
+        button:SetCheckedTexture(path..'Button\\CheckButtonHilight.tga')
+
+        local flash = button.Flash
+        if flash then
+            flash:SetTexture(path..'Button\\UI-QuickslotRed.tga')
+        end
+
+        local border = button.Border
+        if border then
+            border:SetTexture(path..'Button\\UI-ActionButton-Border.tga')
+        end
+
+        local autoCastable = button.AutoCastable
+        if autoCastable then
+            autoCastable:SetTexture(path..'Button\\UI-AutoCastableOverlay.tga')
+        end
+
+        local cooldown = button.Cooldown or _G[name..'Cooldown']
+        if cooldown then
+            cooldown:SetSwipeTexture(path..'ButtonSwipe.tga')
+        end
+
+        local icon = button.Icon or _G[name..'Icon']
+        if icon then
+            local mask = button:CreateMaskTexture()
+
+            mask:SetTexture(path..'ButtonMask.tga')
+            mask:SetPoint('TOPLEFT', -2, 2)
+            mask:SetPoint('BOTTOMRIGHT', 2, -2)
+
+            icon:AddMaskTexture(mask)
+            icon:ClearAllPoints()
+            icon:SetPoint('TOPLEFT', -4, 4)
+            icon:SetPoint('BOTTOMRIGHT', 4, -4)
+        end
+
+        local floatingBg = _G[name..'FloatingBG']
+        if floatingBg then
+            floatingBg:SetTexture(path..'Button\\UI-Quickslot.tga')
+        end
+
+        button.styled = true
+    end
+end
+
+ModernActionBar = LibStub('AceAddon-3.0')
+    :NewAddon(NAME, 'AceConsole-3.0', 'AceHook-3.0', 'AceEvent-3.0')
+
+ModernActionBar:NewModule(
+    'ActionBar',
+    { EmptyFunc = EmptyFunc, UpdateButtonStyle = UpdateButtonStyle },
+    'AceHook-3.0',
+    'AceEvent-3.0'
+)
+
+ModernActionBar:NewModule(
+    'MicroBar',
+    'AceHook-3.0',
+    'AceEvent-3.0'
+)
+
+ModernActionBar:NewModule(
+    'BagBar',
+    { EmptyFunc = EmptyFunc, UpdateButtonStyle = UpdateButtonStyle },
+    'AceHook-3.0',
+    'AceEvent-3.0'
+)
+
+ModernActionBar:NewModule(
+    'StanceBar',
+    { EmptyFunc = EmptyFunc, RemoveTexture = RemoveTexture, UpdateButtonStyle = UpdateButtonStyle },
+    'AceHook-3.0',
+    'AceEvent-3.0'
+)
+
+ModernActionBar:NewModule(
+    'PetBar',
+    { EmptyFunc = EmptyFunc, UpdateButtonStyle = UpdateButtonStyle },
+    'AceHook-3.0',
+    'AceEvent-3.0'
+)
+
+ModernActionBar.optionsTree = {
+    name = name,
+    type = 'group',
+    disabled = InCombatLockdown,
+    args = {},
+}
+
+ModernActionBar.dbDefaults = {
     global = {
-        generalColor = { 1, 1, 1, 1 },
-
-        actionBarBackground = true,
-        actionBarGryphons = true,
-
-        bagBarEnabled = true,
-        bagBarMouseOver = false,
-        bagBarPosition = { 'BOTTOMRIGHT', 2, 44 },
-
-        microBarEnabled = true,
-        microBarMouseOver = false,
-        microBarPosition = { 'BOTTOMRIGHT', 2, -2 },
+        actionBar = {
+            background = true,
+            gryphons = true,
+            vehicleLeaveButton = {
+                anchor = 'BOTTOMLEFT',
+                xOffset = 362,
+                yOffset = 115,
+            }
+        },
+        bagBar = {
+            enabled = true,
+            mouseOver = false,
+            anchor = 'BOTTOMRIGHT',
+            xOffset = -2,
+            yOffset = 50,
+        },
+        microBar = {
+            enabled = true,
+            mouseOver = false,
+            anchor = 'BOTTOMRIGHT',
+            xOffset = -2,
+            yOffset = 2,
+        },
     },
 }
 
-function A:OnInitialize()
-    -- create database
-    self.db = AceDB:New(N..'DB', defaults, true)
+ModernActionBar.optionButtons = {
+    ReputationDetailMainScreenCheckBox,
+    ReputationDetailInactiveCheckBox,
+    InterfaceOptionsActionBarsPanelBottomLeft,
+    InterfaceOptionsActionBarsPanelBottomRight,
+    InterfaceOptionsActionBarsPanelRight,
+    InterfaceOptionsActionBarsPanelRightTwo,
+    InterfaceOptionsActionBarsPanelAlwaysShowActionBars,
+}
 
-    -- register options ui
-    AceConfig:RegisterOptionsTable(N, self.optionsTree, nil)
-    self.interfaceOptions = AceConfigDialog:AddToBlizOptions(N, DISPLAY_NAME)
+function ModernActionBar:OnInitialize()
+    self.db = LibStub('AceDB-3.0')
+        :New(NAME..'DB', self.dbDefaults, true)
 
-    -- register chat commands
+    LibStub('AceConfig-3.0')
+        :RegisterOptionsTable(NAME, self.optionsTree, nil)
+
+    self.optionsFrame = CreateFrame('Frame', NAME..'Options', _G.UIParent)
+
+    -- self.optionsFrame = LibStub('AceConfigDialog-3.0')
+    --     :AddToBlizOptions(name, name)
+
     self:RegisterChatCommand('mab', 'OpenInterfaceOptions')
     self:RegisterChatCommand('modernactionbar', 'OpenInterfaceOptions')
-
-    self.consoleTexture = 'Interface\\AddOns\\'..N..'\\Textures\\Console.tga'
-
-    -- blizzard interface option buttons that affect this addon
-    self.interfaceOptionButtons = {
-        ReputationDetailMainScreenCheckBox,
-        ReputationDetailInactiveCheckBox,
-        InterfaceOptionsActionBarsPanelBottomLeft,
-        InterfaceOptionsActionBarsPanelBottomRight,
-        InterfaceOptionsActionBarsPanelRight,
-        InterfaceOptionsActionBarsPanelRightTwo,
-        InterfaceOptionsActionBarsPanelAlwaysShowActionBars,
-    }
 end
 
-function A:OnEnable()
+function ModernActionBar:OnEnable()
     self:RegisterEvent('PLAYER_ENTERING_WORLD')
     self:RegisterEvent('PLAYER_REGEN_ENABLED')
     self:RegisterEvent('PLAYER_REGEN_DISABLED')
@@ -73,399 +186,87 @@ function A:OnEnable()
     end)
 end
 
-function A:PLAYER_ENTERING_WORLD(isLogin, isReload)
+function ModernActionBar:PLAYER_ENTERING_WORLD(isLogin, isReload)
     if isLogin or isReload then
-        -- empty function for unwanted script handlers
-        local emptyFunc = function() end
-
-        -- remove frames
         for index, frame in ipairs({
-            MainMenuBarPerformanceBarFrame,
-            MainMenuBarMaxLevelBar,
+            _G.MainMenuBarPerformanceBarFrame,
+            _G.MainMenuBarMaxLevelBar
         }) do
-            frame:UnregisterAllEvents()
-            frame:SetScript('OnEvent', nil)
-            frame:SetScript('OnUpdate', nil)
-            frame:SetScript('OnShow', nil)
-            frame:SetScript('OnHide', nil)
-            frame:Hide()
-            frame.SetScript = emptyFunc
-            frame.RegisterEvent = emptyFunc
-            frame.RegisterAllEvents = emptyFunc
-            frame.Show = emptyFunc
+            RemoveFrame(self, frame)
         end
 
-        -- remove textures
         for index, texture in ipairs({
-            MainMenuBarTexture1,
-            MainMenuBarTexture2,
-            MainMenuBarTexture3,
-            MainMenuXPBarTexture0,
-            MainMenuXPBarTexture1,
-            MainMenuXPBarTexture2,
-            MainMenuXPBarTexture3,
-            ReputationWatchBar.StatusBar.WatchBarTexture0,
-            ReputationWatchBar.StatusBar.WatchBarTexture1,
-            ReputationWatchBar.StatusBar.WatchBarTexture2,
-            ReputationWatchBar.StatusBar.WatchBarTexture3,
-            ReputationWatchBar.StatusBar.XPBarTexture0,
-            ReputationWatchBar.StatusBar.XPBarTexture1,
-            ReputationWatchBar.StatusBar.XPBarTexture2,
-            ReputationWatchBar.StatusBar.XPBarTexture3,
-            MainMenuMaxLevelBar0,
-            MainMenuMaxLevelBar1,
-            MainMenuMaxLevelBar2,
-            MainMenuMaxLevelBar3,
-            MultiBarBottomRightButton1FloatingBG,
-            MultiBarBottomRightButton2FloatingBG,
-            MultiBarBottomRightButton3FloatingBG,
-            MultiBarBottomRightButton4FloatingBG,
-            MultiBarBottomRightButton5FloatingBG,
-            MultiBarBottomRightButton6FloatingBG,
-            StanceBarLeft,
-            StanceBarMiddle,
-            StanceBarRight,
-            SlidingActionBarTexture0,
-            SlidingActionBarTexture1,
+            _G.MainMenuBarTexture1,
+            _G.MainMenuBarTexture2,
+            _G.MainMenuBarTexture3,
+            _G.MainMenuXPBarTexture0,
+            _G.MainMenuXPBarTexture1,
+            _G.MainMenuXPBarTexture2,
+            _G.MainMenuXPBarTexture3,
+            _G.ReputationWatchBar.StatusBar.WatchBarTexture0,
+            _G.ReputationWatchBar.StatusBar.WatchBarTexture1,
+            _G.ReputationWatchBar.StatusBar.WatchBarTexture2,
+            _G.ReputationWatchBar.StatusBar.WatchBarTexture3,
+            _G.ReputationWatchBar.StatusBar.XPBarTexture0,
+            _G.ReputationWatchBar.StatusBar.XPBarTexture1,
+            _G.ReputationWatchBar.StatusBar.XPBarTexture2,
+            _G.ReputationWatchBar.StatusBar.XPBarTexture3,
+            _G.MainMenuMaxLevelBar0,
+            _G.MainMenuMaxLevelBar1,
+            _G.MainMenuMaxLevelBar2,
+            _G.MainMenuMaxLevelBar3,
+            _G.MultiBarBottomRightButton1FloatingBG,
+            _G.MultiBarBottomRightButton2FloatingBG,
+            _G.MultiBarBottomRightButton3FloatingBG,
+            _G.MultiBarBottomRightButton4FloatingBG,
+            _G.MultiBarBottomRightButton5FloatingBG,
+            _G.MultiBarBottomRightButton6FloatingBG,
+            _G.StanceBarLeft,
+            _G.StanceBarMiddle,
+            _G.StanceBarRight,
+            _G.SlidingActionBarTexture0,
+            _G.SlidingActionBarTexture1,
         }) do
-            texture:SetTexture(nil)
-            texture:Hide()
-            texture.Show = emptyFunc
+            RemoveTexture(self, texture)
         end
 
-        if not self.db.global.bagBarEnabled then
+        if not self.db.global.bagBar.enabled then
             self:DisableModule('BagBar')
         end
 
-        if not self.db.global.microBarEnabled then
+        if not self.db.global.microBar.enabled then
             self:DisableModule('MicroBar')
         end
     end
 end
 
-function A:PLAYER_REGEN_ENABLED()
-    for index, button in ipairs(self.interfaceOptionButtons) do
+function ModernActionBar:PLAYER_REGEN_ENABLED()
+    if self.shouldOpenOptions then
+        AceConfigDialog:Open(NAME)
+    end
+
+    for index, button in ipairs(self.optionButtons) do
         button:Enable()
     end
 end
 
-function A:PLAYER_REGEN_DISABLED()
-    for index, button in ipairs(self.interfaceOptionButtons) do
+function ModernActionBar:PLAYER_REGEN_DISABLED()
+    if AceConfigDialog.OpenFrames[NAME] then
+        AceConfigDialog:Close(NAME)
+        self.shouldOpenOptions = true
+    end
+
+    for index, button in ipairs(self.optionButtons) do
         button:Disable()
     end
 end
 
-function A:OpenInterfaceOptions()
-    -- AceConfigDialog:Open(N)
-    InterfaceOptionsFrame_OpenToCategory(self.interfaceOptions)
+function ModernActionBar:OpenInterfaceOptions()
+    if InCombatLockdown() then
+        self.shouldOpenOptions = true
+    else
+        AceConfigDialog:Open(NAME)
+    end
+    -- InterfaceOptionsFrame_OpenToCategory(self.interfaceOptions)
     -- InterfaceOptionsFrame_OpenToCategory(InterfaceOptionsActionBarsPanel)
 end
-
---------------------------------------
--- [[ ACTION BAR OPTION HANDLERS ]] --
---------------------------------------
-
------------------------------------
--- [[ BAG BAR OPTION HANDLERS ]] --
------------------------------------
-function A:GetBagBarEnabled(info)
-    return self.db.global.bagBarEnabled
-end
-
-function A:SetBagBarEnabled(info, value)
-    if value ~= self.db.global.bagBarEnabled then
-        self.db.global.bagBarEnabled = value
-
-        if value then
-            self:EnableModule('BagBar')
-        else
-            self:DisableModule('BagBar')
-        end
-    end
-end
-
-function A:BagBarDisabled()
-    return not self:GetBagBarEnabled()
-end
-
-function A:GetBagBarMouseOver(info)
-    return self.db.global.bagBarMouseOver
-end
-
-function A:SetBagBarMouseOver(info, value)
-    if value ~= self.db.global.bagBarMouseOver then
-        self.db.global.bagBarMouseOver = value
-        self:GetModule('BagBar'):UpdateMouserOver()
-    end
-end
-
-function A:GetBagBarAnchor(info)
-    return self.db.global.bagBarPosition[1]
-end
-
-function A:SetBagBarAnchor(info, value)
-    if self.db.global.bagBarPosition[1] ~= value then
-        self.db.global.bagBarPosition[1] = value
-        self:GetModule('BagBar'):UpdatePosition()
-    end
-end
-
-function A:GetBagBarXOffset(info)
-    return self.db.global.bagBarPosition[2]
-end
-
-function A:SetBagBarXOffset(info, value)
-    if self.db.global.bagBarPosition[2] ~= value then
-        self.db.global.bagBarPosition[2] = value
-        self:GetModule('BagBar'):UpdatePosition()
-    end
-end
-
-function A:GetBagBarYOffset(info)
-    return self.db.global.bagBarPosition[3]
-end
-
-function A:SetBagBarYOffset(info, value)
-    if self.db.global.bagBarPosition[3] ~= value then
-        self.db.global.bagBarPosition[3] = value
-        self:GetModule('BagBar'):UpdatePosition()
-    end
-end
-
--------------------------------------
--- [[ MICRO BAR OPTION HANDLERS ]] --
--------------------------------------
-function A:GetMicroBarEnabled(info)
-    return self.db.global.microBarEnabled
-end
-
-function A:SetMicroBarEnabled(info, value)
-    if value ~= self.db.global.microBarEnabled then
-        self.db.global.microBarEnabled = value
-
-        if value then
-            self:EnableModule('MicroBar')
-        else
-            self:DisableModule('MicroBar')
-        end
-    end
-end
-
-function A:MicroBarDisabled()
-    return not self:GetMicroBarEnabled()
-end
-
-function A:GetMicroBarMouseOver(info)
-    return self.db.global.microBarMouseOver
-end
-
-function A:SetMicroBarMouseOver(info, value)
-    if value ~= self.db.global.microBarMouseOver then
-        self.db.global.microBarMouseOver = value
-        self:GetModule('MicroBar'):UpdateMouserOver()
-    end
-end
-
-function A:GetMicroBarAnchor(info)
-    return self.db.global.microBarPosition[1]
-end
-
-function A:SetMicroBarAnchor(info, value)
-    if self.db.global.microBarPosition[1] ~= value then
-        self.db.global.microBarPosition[1] = value
-        self:GetModule('MicroBar'):UpdatePosition()
-    end
-end
-
-function A:GetMicroBarXOffset(info)
-    return self.db.global.microBarPosition[2]
-end
-
-function A:SetMicroBarXOffset(info, value)
-    if self.db.global.microBarPosition[2] ~= value then
-        self.db.global.microBarPosition[2] = value
-        self:GetModule('MicroBar'):UpdatePosition()
-    end
-end
-
-function A:GetMicroBarYOffset(info)
-    return self.db.global.microBarPosition[3]
-end
-
-function A:SetMicroBarYOffset(info, value)
-    if self.db.global.microBarPosition[3] ~= value then
-        self.db.global.microBarPosition[3] = value
-        self:GetModule('MicroBar'):UpdatePosition()
-    end
-end
-
-A.optionsTree = {
-    name = DISPLAY_NAME,
-    handler = A,
-    type = 'group',
-    disabled = function()
-        return InCombatLockdown()
-    end,
-    args = {
-        general = {
-            order = 1,
-            type = 'group',
-            name = 'General',
-            guiInline = true,
-            args = {
-
-            },
-        },
-
-        actionBar = {
-            order = 2,
-            type = 'group',
-            name = 'Action bar',
-            guiInline = true,
-            args = {},
-        },
-
-        bagBarEnabled = {
-            order = 3,
-            type = 'toggle',
-            name = 'Enable Bag Bar',
-            get = 'GetBagBarEnabled',
-            set = 'SetBagBarEnabled',
-        },
-        bagBar = {
-            order = 4,
-            type = 'group',
-            name = 'Bag Bar',
-            guiInline = true,
-            disabled = 'BagBarDisabled',
-            args = {
-                bagBarMouseOver = {
-                    order = 1,
-                    type = 'toggle',
-                    name = 'Enable Mouse Over',
-                    desc = 'Show/hide on mouse over.',
-                    get = 'GetBagBarMouseOver',
-                    set = 'SetBagBarMouseOver',
-                },
-                spacer1 = {
-                    order = 2,
-                    type = 'description',
-                    name = ''
-                },
-                bagBarAnchor = {
-                    order = 3,
-                    type = 'select',
-                    style = 'dropdown',
-                    name = 'Anchor',
-                    desc = 'Anchored position relative to the screen.',
-                    values = {
-                        CENTER = 'Center',
-                        TOP = 'Top',
-                        TOPLEFT = 'Top left',
-                        TOPRIGHT = 'Top right',
-                        RIGHT = 'Right',
-                        BOTTOM = 'Bottom',
-                        BOTTOMLEFT = 'Bottom left',
-                        BOTTOMRIGHT = 'Bottom right',
-                        LEFT = 'Left',
-                    },
-                    get = 'GetBagBarAnchor',
-                    set = 'SetBagBarAnchor',
-                },
-                bagBarXOffset = {
-                    order = 4,
-                    type = 'range',
-                    name = 'Offset X',
-                    desc = 'Horizontal offset relative to the anchored position.',
-                    min = -SCREEN_WIDTH,
-                    max = SCREEN_WIDTH,
-                    step = 1,
-                    get = 'GetBagBarXOffset',
-                    set = 'SetBagBarXOffset',
-                },
-                bagBarYOffset = {
-                    order = 5,
-                    type = 'range',
-                    name = 'Offset Y',
-                    desc = 'Vertical offset relative to the anchored position.',
-                    min = -SCREEN_HEIGHT,
-                    max = SCREEN_HEIGHT,
-                    step = 1,
-                    get = 'GetBagBarYOffset',
-                    set = 'SetBagBarYOffset',
-                },
-            },
-        },
-        microBarEnabled = {
-            order = 5,
-            type = 'toggle',
-            name = 'Enable Micro Bar',
-            get = 'GetMicroBarEnabled',
-            set = 'SetMicroBarEnabled',
-        },
-        microBar = {
-            order = 6,
-            name = 'Micro bar',
-            type = 'group',
-            guiInline = true,
-            disabled = 'MicroBarDisabled',
-            args = {
-                microBarMouseOver = {
-                    order = 1,
-                    type = 'toggle',
-                    name = 'Enable Mouse Over',
-                    desc = 'Show/hide on mouse over.',
-                    get = 'GetMicroBarMouseOver',
-                    set = 'SetMicroBarMouseOver',
-                },
-                spacer1 = {
-                    order = 2,
-                    type = 'description',
-                    name = '',
-                },
-                microBarAnchor = {
-                    order = 3,
-                    type = 'select',
-                    style = 'dropdown',
-                    name = 'Anchor',
-                    desc = 'Anchored position relative to the screen.',
-                    values = {
-                        CENTER = 'Center',
-                        TOP = 'Top',
-                        TOPLEFT = 'Top left',
-                        TOPRIGHT = 'Top right',
-                        RIGHT = 'Right',
-                        BOTTOM = 'Bottom',
-                        BOTTOMLEFT = 'Bottom left',
-                        BOTTOMRIGHT = 'Bottom right',
-                        LEFT = 'Left',
-                    },
-                    get = 'GetMicroBarAnchor',
-                    set = 'SetMicroBarAnchor',
-                },
-                microBarXOffset = {
-                    order = 4,
-                    type = 'range',
-                    name = 'Offset X',
-                    desc = 'Horizontal offset relative to the anchored position.',
-                    min = -SCREEN_WIDTH,
-                    max = SCREEN_WIDTH,
-                    step = 1,
-                    get = 'GetMicroBarXOffset',
-                    set = 'SetMicroBarXOffset',
-                },
-                microBarYOffset = {
-                    order = 5,
-                    type = 'range',
-                    name = 'Offset Y',
-                    desc = 'Vertical offset relative to the anchored position.',
-                    min = -SCREEN_HEIGHT,
-                    max = SCREEN_HEIGHT,
-                    step = 1,
-                    get = 'GetMicroBarYOffset',
-                    set = 'SetMicroBarYOffset',
-                },
-            },
-        },
-    },
-}

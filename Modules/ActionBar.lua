@@ -1,104 +1,119 @@
-local N, S = ...
-local M = S.A:GetModule('ActionBar')
+local ActionBar = _G.ModernActionBar:GetModule('ActionBar')
 
-UIPARENT_MANAGED_FRAME_POSITIONS['MultiBarBottomLeft'] = nil
+function ActionBar:OnInitialize()
+    self.db = _G.ModernActionBar.db.global.actionBar
 
-UIPARENT_MANAGED_FRAME_POSITIONS['PETACTIONBAR_YPOS'] = {
-    baseY = 98,
-    bottomLeft = 46,
-    justBottomRightAndStance = 46,
-    watchBar = 0,
-    maxLevel = 0,
-    isVar = 'yAxis',
-}
+    _G.UIPARENT_MANAGED_FRAME_POSITIONS['MultiBarBottomLeft'] = nil
 
-UIPARENT_MANAGED_FRAME_POSITIONS['StanceBarFrame'] = {
-    baseY = -2,
-    bottomLeft = 46,
-    watchBar = 0,
-    maxLevel = 0,
-    anchorTo = 'MainMenuBar',
-    point = 'BOTTOMLEFT',
-    rpoint = 'TOPLEFT',
-    xOffset = 30,
-}
+    self.consoleTexture = 'Interface\\AddOns\\ModernActionBar\\Textures\\Console.tga'
 
-function M:OnInitialize()
-    self.db = S.A.db
-    self.consoleTexture = S.A.consoleTexture
+    _G.ReputationWatchBar._SetPoint = _G.ReputationWatchBar.SetPoint
+    _G.ReputationWatchBar.SetPoint = self.EmptyFunc
 
-    -- fix pet and stance positioning
-    -- local UIMFP = UIPARENT_MANAGED_FRAME_POSITIONS
-
-    -- UIMFP['MultiBarBottomLeft'] = nil
-
-    -- UIMFP['PETACTIONBAR_YPOS'] = {
-    --     baseY = 98,
-    --     bottomLeft = 46,
-    --     justBottomRightAndStance = 46,
-    --     watchBar = 0,
-    --     maxLevel = 0,
-    --     isVar = 'yAxis',
-    -- }
-
-    -- UIMFP['StanceBarFrame'] = {
-    --     baseY = -2,
-    --     bottomLeft = 46,
-    --     watchBar = 0,
-    --     maxLevel = 0,
-    --     anchorTo = 'MainMenuBar',
-    --     point = 'BOTTOMLEFT',
-    --     rpoint = 'TOPLEFT',
-    --     xOffset = 30,
-    -- }
-
-    -- circumvent rep. bar positioning on rep. change
-    ReputationWatchBar._SetPoint = ReputationWatchBar.SetPoint
-
-    ReputationWatchBar.SetPoint = function(self, ...)
-        self:SetSize(MainMenuBar:GetWidth(), 16)
-        self:ClearAllPoints()
-        self:_SetPoint('BOTTOMLEFT', MainMenuBar, 'BOTTOMLEFT')
-        self:_SetPoint('BOTTOMRIGHT', MainMenuBar, 'BOTTOMRIGHT')
-
-        self.StatusBar:ClearAllPoints()
-        self.StatusBar:SetAllPoints()
-    end
+    _G.ReputationWatchBar._ClearAllPoints = _G.ReputationWatchBar.ClearAllPoints
+    _G.ReputationWatchBar.ClearAllPoints = self.EmptyFunc
 end
 
-function M:OnEnable()
-    -- register events
+function ActionBar:OnEnable()
     self:RegisterEvent('PLAYER_ENTERING_WORLD')
     self:RegisterEvent('ACTIONBAR_SHOWGRID')
     self:RegisterEvent('ACTIONBAR_HIDEGRID')
-
-    -- register hooks
     self:SecureHook('SetActionBarToggles', 'UpdateActionBar')
     self:SecureHook('MainMenuBar_UpdateExperienceBars', 'UpdateWatchBar')
 end
 
-function M:StyleButton(button, point, xOffset, yOffset)
-    button:SetSize(36, 36)
+function ActionBar:PLAYER_ENTERING_WORLD(isLogin, isReload)
+    if isLogin or isReload then
+        _G.MultiBarBottomRight:SetSize(246, 86)
+        _G.MultiBarBottomRight:ClearAllPoints()
+        _G.MultiBarBottomRight:SetPoint('BOTTOMRIGHT', _G.MainMenuBar, 'BOTTOMRIGHT', -8, 20)
 
-    if point and xOffset and yOffset then
-        button:ClearAllPoints()
-        button:SetPoint(point, xOffset, yOffset)
+        _G.MultiBarBottomLeft:SetSize(498, 36)
+        _G.MultiBarBottomLeft:ClearAllPoints()
+        _G.MultiBarBottomLeft:SetPoint('BOTTOMLEFT', _G.ActionButton1, 'TOPLEFT', 0, 15)
+
+        for index = 1, 12 do
+            local actionButton = _G['ActionButton'..index]
+            actionButton:ClearAllPoints()
+            actionButton:SetPoint('TOPLEFT', (index - 1) * 42 + 9, -14)
+            self:UpdateButtonStyle(actionButton)
+
+            local bottomRightButton = _G['MultiBarBottomRightButton'..index]
+            bottomRightButton:ClearAllPoints()
+            self:UpdateButtonStyle(bottomRightButton)
+
+            if index < 7 then
+                bottomRightButton:GetNormalTexture():SetAlpha(1)
+                bottomRightButton:SetPoint('BOTTOMLEFT', (index - 1) * 42, 0)
+
+                bottomRightButton:HookScript('OnReceiveDrag', function()
+                    self:ShowButtonGrid(bottomRightButton:GetName(), true)
+                end)
+            else
+                bottomRightButton:SetPoint('TOPLEFT', (index - 7) * 42, 0)
+            end
+
+            self:UpdateButtonStyle(_G['MultiBarBottomLeftButton'..index])
+            self:UpdateButtonStyle(_G['MultiBarLeftButton'..index])
+            self:UpdateButtonStyle(_G['MultiBarRightButton'..index])
+        end
+
+        _G.MainMenuBarLeftEndCap:ClearAllPoints()
+        _G.MainMenuBarLeftEndCap:SetPoint('BOTTOM', _G.UIParent, 'BOTTOM')
+        _G.MainMenuBarLeftEndCap:SetPoint('RIGHT', _G.MainMenuBar, 'LEFT', 32, 0)
+        _G.MainMenuBarLeftEndCap:SetSize(128, 77.5)
+        _G.MainMenuBarLeftEndCap:SetTexture(self.consoleTexture)
+        _G.MainMenuBarLeftEndCap:SetTexCoord(0.56884765625, 0.6982421875, 0.697265625, 1)
+
+        _G.MainMenuBarRightEndCap:ClearAllPoints()
+        _G.MainMenuBarRightEndCap:SetPoint('BOTTOM', _G.UIParent, 'BOTTOM')
+        _G.MainMenuBarRightEndCap:SetPoint('LEFT', _G.MainMenuBar, 'RIGHT', -32, 0)
+        _G.MainMenuBarRightEndCap:SetSize(128, 77.5)
+        _G.MainMenuBarRightEndCap:SetTexture(self.consoleTexture)
+        _G.MainMenuBarRightEndCap:SetTexCoord(0.56884765625, 0.6982421875, 0.39453125, 0.697265625)
+
+        _G.MainMenuBarTexture0:SetAllPoints()
+        _G.MainMenuBarTexture0:SetTexture(self.consoleTexture)
+
+        _G.MainMenuExpBar:SetHeight(16)
+        _G.MainMenuExpBar:ClearAllPoints()
+        _G.MainMenuExpBar:SetPoint('BOTTOMLEFT', _G.MainMenuBar, 'BOTTOMLEFT')
+        _G.MainMenuExpBar:SetPoint('BOTTOMRIGHT', _G.MainMenuBar, 'BOTTOMRIGHT')
+
+        _G.ReputationWatchBar:SetHeight(16)
+        _G.ReputationWatchBar:_ClearAllPoints()
+        _G.ReputationWatchBar:_SetPoint('BOTTOMLEFT')
+        _G.ReputationWatchBar:_SetPoint('BOTTOMRIGHT')
+        _G.ReputationWatchBar.StatusBar:ClearAllPoints()
+        _G.ReputationWatchBar.StatusBar:SetAllPoints()
+
+        _G.ActionBarUpButton:ClearAllPoints()
+        _G.ActionBarUpButton:SetPoint('LEFT', _G.MainMenuBar, 'LEFT', 506, 12)
+
+        _G.ActionBarDownButton:ClearAllPoints()
+        _G.ActionBarDownButton:SetPoint('LEFT', _G.MainMenuBar, 'LEFT', 506, -7)
+
+        _G.MainMenuBarPageNumber:SetSize(14, 14)
+        _G.MainMenuBarPageNumber:ClearAllPoints()
+        _G.MainMenuBarPageNumber:SetPoint('LEFT', _G.MainMenuBar, 'LEFT', 534, 3)
+
+        self:UpdateActionBar()
+        self:UpdateWatchBar()
+        self:UpdateBackground()
+        self:UpdateGryphons()
+        self:FixVehicleLeaveButton()
     end
 end
 
-function M:StyleStanceButton(button, xOffset, yOffset)
-    local texture = button:GetNormalTexture()
-
-    button:SetSize(30, 30)
-    button:ClearAllPoints()
-    button:SetPoint('LEFT', xOffset, yOffset)
-
-    texture:ClearAllPoints()
-    texture:SetPoint('TOPLEFT', button, 'TOPLEFT', -10, 10)
-    texture:SetPoint('BOTTOMRIGHT', button, 'BOTTOMRIGHT', 10, -10)
+function ActionBar:ACTIONBAR_SHOWGRID()
+    self:ShowButtonGridRange('MultiBarBottomRightButton', 1, 6, true)
 end
 
-function M:ShowButtonGrid(name, show)
+function ActionBar:ACTIONBAR_HIDEGRID()
+    self:ShowButtonGridRange('MultiBarBottomRightButton', 1, 6, true)
+end
+
+function ActionBar:ShowButtonGrid(name, show)
     local alpha = show and 1 or 0
 
     _G[name..'HotKey']:SetAlpha(alpha)
@@ -107,7 +122,7 @@ function M:ShowButtonGrid(name, show)
     _G[name..'Cooldown']:SetAlpha(alpha)
 end
 
-function M:ShowButtonGridRange(baseName, from, to, show)
+function ActionBar:ShowButtonGridRange(baseName, from, to, show)
     for index = from, to do
         local name = baseName..index
 
@@ -119,138 +134,233 @@ function M:ShowButtonGridRange(baseName, from, to, show)
     end
 end
 
-function M:UpdateActionBar()
+function ActionBar:UpdateBackground()
+    _G.MainMenuBarTexture0:SetAlpha(self.db.background and 1 or 0)
+end
+
+function ActionBar:UpdateGryphons()
+    _G.MainMenuBarLeftEndCap:SetAlpha(self.db.gryphons and 1 or 0)
+    _G.MainMenuBarRightEndCap:SetAlpha(self.db.gryphons and 1 or 0)
+end
+
+function ActionBar:UpdateActionBar()
     if InCombatLockdown() then
         return
     end
 
-    -- use small or large layout depending on action bars shown
     if SHOW_MULTI_ACTIONBAR_2 then
         -- large layout
-        MainMenuBar:SetSize(806, 70)
-        MainMenuBarTexture0:SetTexCoord(0, 0.787109375, 0, 0.2734375)
+        _G.MainMenuBar:SetSize(806, 70)
+        _G.MainMenuBarTexture0:SetTexCoord(0, 0.787109375, 0, 0.2734375)
     else
         -- small layout
-        MainMenuBar:SetSize(552, 70)
-        MainMenuBarTexture0:SetTexCoord(0, 0.5390625, 0.7265625, 1)
+        _G.MainMenuBar:SetSize(552, 70)
+        _G.MainMenuBarTexture0:SetTexCoord(0, 0.5390625, 0.7265625, 1)
     end
 end
 
-function M:UpdateWatchBar()
+function ActionBar:UpdateWatchBar()
     if InCombatLockdown() then
         return
     end
 
-    local showExp = MainMenuExpBar:IsShown()
-    local showRep = ReputationWatchBar:IsShown()
+    local showExp = _G.MainMenuExpBar:IsShown()
+    local showRep = _G.ReputationWatchBar:IsShown()
 
     if showExp or showRep then
-        MainMenuBar:SetPoint('BOTTOM')
+        _G.MainMenuBar:SetPoint('BOTTOM')
 
         if showRep then
-            MainMenuExpBar:Hide()
-            MainMenuExpBar.pauseUpdates = true
+            _G.MainMenuExpBar:Hide()
+            _G.MainMenuExpBar.pauseUpdates = true
         elseif UnitLevel('player') < MAX_PLAYER_LEVEL then
-            MainMenuExpBar:Show()
-            MainMenuExpBar.pauseUpdates = nil
+            _G.MainMenuExpBar:Show()
+            _G.MainMenuExpBar.pauseUpdates = nil
         end
     else
-        MainMenuBar:SetPoint('BOTTOM', 0, -16)
+        _G.MainMenuBar:SetPoint('BOTTOM', 0, -16)
     end
 end
 
-function M:PLAYER_ENTERING_WORLD(isLogin, isReload)
-    if isLogin or isReload then
-        -- action bars position and sizing
-        MultiBarBottomRight:ClearAllPoints()
-        MultiBarBottomRight:SetPoint('BOTTOMRIGHT', MainMenuBar, 'BOTTOMRIGHT', -8, 20)
-        MultiBarBottomRight:SetSize(246, 89)
-        MultiBarBottomLeft:SetSize(498, 36)
+function ActionBar:FixVehicleLeaveButton()
+    local frame = CreateFrame('Frame', nil, _G.UIParent)
+    frame:SetPoint('CENTER', _G.UIParent, 'CENTER')
+    frame:SetSize(_G.MainMenuBarVehicleLeaveButton:GetSize())
 
-        -- fix action buttons
-        for index = 1, 12 do
-            self:StyleButton(_G['ActionButton'..index], 'TOPLEFT', (index - 1) * 42 + 9, -14)
-            self:StyleButton(_G['MultiBarBottomLeftButton'..index], 'LEFT', (index - 1) * 42, 0)
+    local button = _G.MainMenuBarVehicleLeaveButton
+    button:ClearAllPoints()
+    button:SetParent(_G.UIParent)
+    button:SetPoint('CENTER', frame, 'CENTER')
 
-            local bottomRightButton = _G['MultiBarBottomRightButton'..index]
+    self:SecureHook(button, 'SetPoint', function(_, _, parent)
+        if parent ~= frame then
+            button:ClearAllPoints()
+            button:SetParent(_G.UIParent)
+            button:SetPoint('CENTER', frame, 'CENTER')
+        end
+    end)
 
-            if index < 7 then
-                bottomRightButton:GetNormalTexture():SetAlpha(1)
-                self:StyleButton(bottomRightButton, 'BOTTOMLEFT', (index - 1) * 42, 0)
+    self.vehicleLeaveButton = frame
+end
 
-                bottomRightButton:HookScript('OnReceiveDrag', function()
-                    self:ShowButtonGrid(bottomRightButton:GetName(), true)
-                end)
-            else
-                self:StyleButton(bottomRightButton, 'TOPLEFT', (index - 7) * 42, 0)
+function ActionBar:UpdateVehicleLeaveButtonPosition()
+    if InCombatLockdown() then
+        return
+    end
+
+    self.vehicleLeaveButton:ClearAllPoints()
+    self.vehicleLeaveButton:SetPoint(
+        self.db.vehicleLeaveButton.anchor,
+        self.db.vehicleLeaveButton.xOffset,
+        self.db.vehicleLeaveButton.yOffset
+    )
+end
+
+_G.ModernActionBar.optionsTree.args.actionBar = {
+    order = 1,
+    type = 'group',
+    handler = ActionBar,
+    name = 'Action Bar',
+    guiInline = true,
+    args = {
+        background = {
+            order = 1,
+            type = 'toggle',
+            name = 'Show Background',
+            desc = '',
+            get = function(info)
+                return info.handler.db.background
+            end,
+            set = function(info, value)
+                info.handler.db.background = value
+                info.handler:UpdateBackground()
+            end,
+        },
+        spacer1 = {
+            order = 2,
+            type = 'description',
+            name = '',
+        },
+        gryphons = {
+            order = 3,
+            type = 'toggle',
+            name = 'Show Gryphons',
+            desc = '',
+            get = function(info)
+                return info.handler.db.gryphons
+            end,
+            set = function(info, value)
+                info.handler.db.gryphons = value
+                info.handler:UpdateGryphons()
+            end,
+        },
+        spacer2 = {
+            order = 4,
+            type = 'description',
+            name = '',
+        },
+        reset = {
+            order = 5,
+            type = 'execute',
+            name = 'Reset',
+            desc = '',
+            func = function(info)
+                local defaults = _G[info.appName].dbDefaults.global.actionBar
+
+                for key, value in pairs(defaults) do
+                    info.handler.db[key] = value
+                end
+
+                info.handler:UpdateBackground()
+                info.handler:UpdateGryphons()
             end
+        },
+    },
+}
 
-            _G['MultiBarLeftButton'..index]:SetSize(36, 36)
-            _G['MultiBarRightButton'..index]:SetSize(36, 36)
-        end
+_G.ModernActionBar.optionsTree.args.vehicleLeaveButton = {
+    order = 2,
+    type = 'group',
+    handler = ActionBar,
+    name = 'Vehicle Leave Button',
+    guiInline = true,
+    args = {
+        anchor = {
+            order = 1,
+            type = 'select',
+            style = 'dropdown',
+            name = 'Anchor',
+            desc = 'Anchored position relative to the screen.',
+            values = {
+                CENTER = 'Center',
+                TOP = 'Top',
+                TOPLEFT = 'Top left',
+                TOPRIGHT = 'Top right',
+                RIGHT = 'Right',
+                BOTTOM = 'Bottom',
+                BOTTOMLEFT = 'Bottom left',
+                BOTTOMRIGHT = 'Bottom right',
+                LEFT = 'Left',
+            },
+            get = function(info)
+                return info.handler.db.vehicleLeaveButton.anchor
+            end,
+            set = function(info, value)
+                info.handler.db.vehicleLeaveButton.anchor = value
+                info.handler:UpdateVehicleLeaveButtonPosition()
+            end,
+        },
+        xOffset = {
+            order = 2,
+            type = 'range',
+            name = 'Offset X',
+            desc = 'Horizontal offset relative to the anchored position.',
+            min = -(floor(GetScreenWidth())),
+            max = floor(GetScreenWidth()),
+            step = 1,
+            get = function(info)
+                return info.handler.db.vehicleLeaveButton.xOffset
+            end,
+            set = function(info, value)
+                info.handler.db.vehicleLeaveButton.xOffset = value
+                info.handler:UpdateVehicleLeaveButtonPosition()
+            end,
+        },
+        yOffset = {
+            order = 3,
+            type = 'range',
+            name = 'Offset Y',
+            desc = 'Vertical offset relative to the anchored position.',
+            min = -(floor(GetScreenHeight())),
+            max = floor(GetScreenHeight()),
+            step = 1,
+            get = function(info)
+                return info.handler.db.vehicleLeaveButton.yOffset
+            end,
+            set = function(info, value)
+                info.handler.db.vehicleLeaveButton.yOffset = value
+                info.handler:UpdateVehicleLeaveButtonPosition()
+            end,
+        },
+        spacer1 = {
+            order = 4,
+            type = 'description',
+            name = '',
+        },
+        reset = {
+            order = 5,
+            type = 'execute',
+            name = 'Reset',
+            desc = '',
+            func = function(info)
+                local defaults = _G[info.appName].dbDefaults.global.actionBar.vehicleLeaveButton
 
-        -- stance and pet bar sizing
-        StanceBarFrame:SetSize(30, 30)
-        PetActionBarFrame:SetSize(30, 30)
+                for key, value in pairs(defaults) do
+                    info.handler.db.vehicleLeaveButton[key] = value
+                end
 
-        -- fix stance and pet buttons
-        for index = 1, 10 do
-            local xOffset = (index - 1) * 34
-
-            self:StyleStanceButton(_G['StanceButton'..index], xOffset, 0)
-            self:StyleStanceButton(_G['PetActionButton'..index], xOffset, 0)
-        end
-
-        -- left gryphon position, size and texture
-        MainMenuBarLeftEndCap:ClearAllPoints()
-        MainMenuBarLeftEndCap:SetPoint('BOTTOM', UIParent, 'BOTTOM')
-        MainMenuBarLeftEndCap:SetPoint('RIGHT', MainMenuBar, 'LEFT', 32, 0)
-        MainMenuBarLeftEndCap:SetSize(128, 77.5)
-        MainMenuBarLeftEndCap:SetTexture(self.consoleTexture)
-        MainMenuBarLeftEndCap:SetTexCoord(0.56884765625, 0.6982421875, 0.697265625, 1)
-
-        -- right gryphon position, size and texture
-        MainMenuBarRightEndCap:ClearAllPoints()
-        MainMenuBarRightEndCap:SetPoint('BOTTOM', UIParent, 'BOTTOM')
-        MainMenuBarRightEndCap:SetPoint('LEFT', MainMenuBar, 'RIGHT', -32, 0)
-        MainMenuBarRightEndCap:SetSize(128, 77.5)
-        MainMenuBarRightEndCap:SetTexture(self.consoleTexture)
-        MainMenuBarRightEndCap:SetTexCoord(0.56884765625, 0.6982421875, 0.39453125, 0.697265625)
-
-        -- action bar texture
-        MainMenuBarTexture0:SetAllPoints()
-        MainMenuBarTexture0:SetTexture(self.consoleTexture)
-
-        -- exp. bar size and texture
-        MainMenuExpBar:SetHeight(16)
-        MainMenuExpBar:ClearAllPoints()
-        MainMenuExpBar:SetPoint('BOTTOMLEFT', MainMenuBar, 'BOTTOMLEFT')
-        MainMenuExpBar:SetPoint('BOTTOMRIGHT', MainMenuBar, 'BOTTOMRIGHT')
-
-        -- action page up button position
-        ActionBarUpButton:ClearAllPoints()
-        ActionBarUpButton:SetPoint('LEFT', MainMenuBar, 'LEFT', 506, 12)
-
-        -- action page down button position
-        ActionBarDownButton:ClearAllPoints()
-        ActionBarDownButton:SetPoint('LEFT', MainMenuBar, 'LEFT', 506, -7)
-
-        -- action page number size and position
-        MainMenuBarPageNumber:SetSize(14, 14)
-        MainMenuBarPageNumber:ClearAllPoints()
-        MainMenuBarPageNumber:SetPoint('LEFT', MainMenuBar, 'LEFT', 534, 3)
-
-        -- invoke update functions initially
-        UIParent_ManageFramePositions()
-        self:UpdateActionBar()
-        self:UpdateWatchBar()
-    end
-end
-
-function M:ACTIONBAR_SHOWGRID()
-    self:ShowButtonGridRange('MultiBarBottomRightButton', 1, 6, true)
-end
-
-function M:ACTIONBAR_HIDEGRID()
-    self:ShowButtonGridRange('MultiBarBottomRightButton', 1, 6, true)
-end
+                info.handler:UpdateVehicleLeaveButtonPosition()
+            end
+        },
+    },
+}
