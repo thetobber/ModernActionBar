@@ -135,7 +135,34 @@ function ActionBar:ShowButtonGridRange(baseName, from, to, show)
 end
 
 function ActionBar:UpdateBackground()
-    _G.MainMenuBarTexture0:SetAlpha(self.db.background and 1 or 0)
+    if InCombatLockdown() then
+        return
+    end
+
+    -- TODO: Somehow factor in stance/pet bar position
+
+    _G.MultiBarBottomLeft:ClearAllPoints()
+
+    if self.db.background then
+        _G.MainMenuBarTexture0:SetAlpha(1)
+        _G.MultiBarBottomLeft:SetPoint('BOTTOMLEFT', _G.ActionButton1, 'TOPLEFT', 0, 15)
+    else
+        _G.MainMenuBarTexture0:SetAlpha(0)
+        _G.MultiBarBottomLeft:SetPoint('BOTTOMLEFT', _G.ActionButton1, 'TOPLEFT', 0, 5)
+    end
+
+    for index = 7, 12 do
+        local button = _G['MultiBarBottomRightButton'..index]
+        button:ClearAllPoints()
+
+        local xOffset = (index - 7) * 42
+
+        if self.db.background then
+            button:SetPoint('TOPLEFT', xOffset, 0)
+        else
+            button:SetPoint('TOPLEFT', xOffset, -9)
+        end
+    end
 end
 
 function ActionBar:UpdateGryphons()

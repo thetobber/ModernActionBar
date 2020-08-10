@@ -14,4 +14,6 @@ Fix/update stance bar, pet bar and vehicle leave button positions.
 
 Make sure managed frames are still positioned correctly.
 
-Upscale up/down arrow, micro button, pet bar background and stance bar background textures
+Upscale up/down arrow, micro button, pet bar background and stance bar background textures.
+
+Fix "always show action bar grid" bottom right 1-6 button grid showing when option is enabled.
