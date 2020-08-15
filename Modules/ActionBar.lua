@@ -1,3 +1,8 @@
+local _G = getfenv(0)
+local CreateFrame = _G.CreateFrame
+local InCombatLockdown = _G.InCombatLockdown
+local pairs = _G.pairs
+
 local ActionBar = _G.ModernActionBar:GetModule('ActionBar')
 
 function ActionBar:OnInitialize()
@@ -36,14 +41,14 @@ function ActionBar:PLAYER_ENTERING_WORLD(isLogin, isReload)
             local actionButton = _G['ActionButton'..index]
             actionButton:ClearAllPoints()
             actionButton:SetPoint('TOPLEFT', (index - 1) * 42 + 9, -14)
-            self:UpdateButtonStyle(actionButton)
+            self:StyleButton(actionButton)
 
             local bottomRightButton = _G['MultiBarBottomRightButton'..index]
             bottomRightButton:ClearAllPoints()
-            self:UpdateButtonStyle(bottomRightButton)
+            self:StyleButton(bottomRightButton)
 
             if index < 7 then
-                bottomRightButton:GetNormalTexture():SetAlpha(1)
+                -- bottomRightButton:GetNormalTexture():SetAlpha(1)
                 bottomRightButton:SetPoint('BOTTOMLEFT', (index - 1) * 42, 0)
 
                 bottomRightButton:HookScript('OnReceiveDrag', function()
@@ -53,9 +58,9 @@ function ActionBar:PLAYER_ENTERING_WORLD(isLogin, isReload)
                 bottomRightButton:SetPoint('TOPLEFT', (index - 7) * 42, 0)
             end
 
-            self:UpdateButtonStyle(_G['MultiBarBottomLeftButton'..index])
-            self:UpdateButtonStyle(_G['MultiBarLeftButton'..index])
-            self:UpdateButtonStyle(_G['MultiBarRightButton'..index])
+            self:StyleButton(_G['MultiBarBottomLeftButton'..index])
+            self:StyleButton(_G['MultiBarLeftButton'..index])
+            self:StyleButton(_G['MultiBarRightButton'..index])
         end
 
         _G.MainMenuBarLeftEndCap:ClearAllPoints()

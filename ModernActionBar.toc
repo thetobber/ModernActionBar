@@ -1,6 +1,6 @@
 ## Interface: 11305
 ## Author: Tobias
-## Version: 2.0.0-alpha
+## Version: 2.0.0
 ## Title: ModernActionBar
 ## Notes: An action bar replacement that mimics the retail layout.
 ## DefaultState: enabled

@@ -1,6 +1,15 @@
 local NAME, _ = ...
+local _G = getfenv(0)
+local CreateFrame = _G.CreateFrame
+local InCombatLockdown = _G.InCombatLockdown
+local ipairs = _G.ipairs
+local hooksecurefunc = _G.hooksecurefunc
+local floor = _G.floor
 
-local AceConfigDialog = LibStub('AceConfigDialog-3.0')
+local AceAddon = _G.LibStub('AceAddon-3.0')
+local AceDB = _G.LibStub('AceDB-3.0')
+local AceConfig = _G.LibStub('AceConfig-3.0')
+local AceConfigDialog = _G.LibStub('AceConfigDialog-3.0')
 
 local function EmptyFunc() end
 
@@ -23,104 +32,166 @@ local function RemoveTexture(self, texture)
     texture.Show = EmptyFunc
 end
 
-local function UpdateButtonStyle(self, button)
+hooksecurefunc('ActionButton_UpdateRangeIndicator', function(self, checksRange, inRange)
+    if self.HotKey:GetText() == _G.RANGE_INDICATOR then
+        if checksRange and inRange then
+            self.HotKey:SetVertexColor(1, 1, 1, 1)
+        end
+    else
+        if checksRange and not inRange then
+            self.HotKey:SetVertexColor(_G.RED_FONT_COLOR:GetRGB())
+        else
+            self.HotKey:SetVertexColor(1, 1, 1, 1)
+        end
+    end
+end)
+
+local function StyleButton(self, button)
     if not button.styled then
         local path = 'Interface\\AddOns\\'..NAME..'\\Textures\\'
         local name = button:GetName()
+        local size = floor(button:GetSize())
 
-        button:SetNormalTexture(path..'Button\\UI-Quickslot2.tga')
-        button:SetPushedTexture(path..'Button\\UI-Quickslot-Depress.tga')
-        button:SetHighlightTexture(path..'Button\\ButtonHilight-Square.tga')
-        button:SetCheckedTexture(path..'Button\\CheckButtonHilight.tga')
+        button:GetNormalTexture():SetAlpha(0)
+
+        button.NormalTex = button:CreateTexture(nil, 'ARTWORK')
+        button.NormalTex:SetTexture(path..'Button\\Normal.tga')
+        button.NormalTex:SetAllPoints()
+
+        button:SetPushedTexture(path..'Button\\Pushed.tga')
+        button:GetPushedTexture():ClearAllPoints()
+        button:GetPushedTexture():SetAllPoints()
+
+        button:SetHighlightTexture(path..'Button\\Highlight.tga')
+        button:GetHighlightTexture():ClearAllPoints()
+        button:GetHighlightTexture():SetAllPoints()
+
+        button:SetCheckedTexture(path..'Button\\Checked.tga')
+        button:GetCheckedTexture():ClearAllPoints()
+        button:GetCheckedTexture():SetAllPoints()
 
         local flash = button.Flash
         if flash then
-            flash:SetTexture(path..'Button\\UI-QuickslotRed.tga')
+            flash:SetTexture(path..'Button\\Flash.tga')
+            flash:ClearAllPoints()
+            flash:SetAllPoints()
         end
 
         local border = button.Border
         if border then
-            border:SetTexture(path..'Button\\UI-ActionButton-Border.tga')
+            border:SetTexture(path..'Button\\Border.tga')
+            border:ClearAllPoints()
+            border:SetAllPoints()
         end
 
-        local autoCastable = button.AutoCastable
+        local autoCastable = _G[name..'AutoCastable'] or button.AutoCastable
         if autoCastable then
-            autoCastable:SetTexture(path..'Button\\UI-AutoCastableOverlay.tga')
+            autoCastable:SetTexture(path..'Button\\AutoCastable.tga')
+            autoCastable:ClearAllPoints()
+            autoCastable:SetAllPoints()
         end
 
-        local cooldown = button.Cooldown or _G[name..'Cooldown']
+        local cooldown = button.cooldown or button.Cooldown
         if cooldown then
-            cooldown:SetSwipeTexture(path..'ButtonSwipe.tga')
+            cooldown:SetSwipeTexture(path..'Button\\Swipe.tga')
+            cooldown:SetSwipeColor(0, 0, 0, 1)
+
+            cooldown:ClearAllPoints()
+            cooldown:SetAllPoints()
         end
 
-        local icon = button.Icon or _G[name..'Icon']
+        local icon = button.icon or button.Icon
         if icon then
-            local mask = button:CreateMaskTexture()
-
-            mask:SetTexture(path..'ButtonMask.tga')
-            mask:SetPoint('TOPLEFT', -2, 2)
-            mask:SetPoint('BOTTOMRIGHT', 2, -2)
-
-            icon:AddMaskTexture(mask)
             icon:ClearAllPoints()
-            icon:SetPoint('TOPLEFT', -4, 4)
-            icon:SetPoint('BOTTOMRIGHT', 4, -4)
+            icon:SetPoint('CENTER')
+            icon:SetTexCoord(0.0625, 0.9375, 0.0625, 0.9375)
+            icon:SetSize(size - 4, size - 4)
         end
 
         local floatingBg = _G[name..'FloatingBG']
         if floatingBg then
-            floatingBg:SetTexture(path..'Button\\UI-Quickslot.tga')
+            floatingBg:SetTexture(path..'Button\\Floating.tga')
+            floatingBg:ClearAllPoints()
+            floatingBg:SetAllPoints()
+        end
+
+        local hotKey = button.HotKey
+        if hotKey then
+            hotKey:ClearAllPoints()
+            hotKey:SetDrawLayer('OVERLAY')
+            hotKey:SetFontObject('MAB_ButtonNormalFont')
+            hotKey:SetJustifyH('RIGHT')
+            hotKey:SetPoint('TOP')
+            hotKey:SetSize(size - 4, 16)
+        end
+
+        local count = button.Count
+        if count then
+            count:ClearAllPoints()
+            count:SetDrawLayer('OVERLAY')
+            count:SetFontObject('MAB_ButtonNormalFont')
+            count:SetJustifyH('RIGHT')
+            count:SetPoint('BOTTOM')
+            count:SetSize(size - 4, 16)
+        end
+
+        local macro = button.Name
+        if macro then
+            macro:ClearAllPoints()
+            macro:SetDrawLayer('OVERLAY')
+            macro:SetFontObject('MAB_ButtonNormalFont')
+            macro:SetJustifyH('LEFT')
+            macro:SetPoint('BOTTOM')
+            macro:SetSize(size - 4, 16)
         end
 
         button.styled = true
     end
 end
 
-ModernActionBar = LibStub('AceAddon-3.0')
-    :NewAddon(NAME, 'AceConsole-3.0', 'AceHook-3.0', 'AceEvent-3.0')
+_G.ModernActionBar = AceAddon:NewAddon(NAME, 'AceConsole-3.0', 'AceHook-3.0', 'AceEvent-3.0')
 
-ModernActionBar:NewModule(
+_G.ModernActionBar:NewModule(
     'ActionBar',
-    { EmptyFunc = EmptyFunc, UpdateButtonStyle = UpdateButtonStyle },
+    { EmptyFunc = EmptyFunc, StyleButton = StyleButton },
     'AceHook-3.0',
     'AceEvent-3.0'
 )
 
-ModernActionBar:NewModule(
+_G.ModernActionBar:NewModule(
     'MicroBar',
     'AceHook-3.0',
     'AceEvent-3.0'
 )
 
-ModernActionBar:NewModule(
+_G.ModernActionBar:NewModule(
     'BagBar',
-    { EmptyFunc = EmptyFunc, UpdateButtonStyle = UpdateButtonStyle },
+    { EmptyFunc = EmptyFunc, StyleButton = StyleButton },
     'AceHook-3.0',
     'AceEvent-3.0'
 )
 
-ModernActionBar:NewModule(
+_G.ModernActionBar:NewModule(
     'StanceBar',
-    { EmptyFunc = EmptyFunc, RemoveTexture = RemoveTexture, UpdateButtonStyle = UpdateButtonStyle },
+    { EmptyFunc = EmptyFunc, RemoveTexture = RemoveTexture, StyleButton = StyleButton },
     'AceHook-3.0',
     'AceEvent-3.0'
 )
 
-ModernActionBar:NewModule(
+_G.ModernActionBar:NewModule(
     'PetBar',
-    { EmptyFunc = EmptyFunc, UpdateButtonStyle = UpdateButtonStyle },
+    { EmptyFunc = EmptyFunc, StyleButton = StyleButton },
     'AceHook-3.0',
     'AceEvent-3.0'
 )
 
-ModernActionBar.optionsTree = {
+_G.ModernActionBar.optionsTree = {
     name = name,
     type = 'group',
-    disabled = InCombatLockdown,
     args = {},
 }
 
-ModernActionBar.dbDefaults = {
+_G.ModernActionBar.dbDefaults = {
     global = {
         actionBar = {
             background = true,
@@ -148,45 +219,37 @@ ModernActionBar.dbDefaults = {
     },
 }
 
-ModernActionBar.optionButtons = {
-    ReputationDetailMainScreenCheckBox,
-    ReputationDetailInactiveCheckBox,
-    InterfaceOptionsActionBarsPanelBottomLeft,
-    InterfaceOptionsActionBarsPanelBottomRight,
-    InterfaceOptionsActionBarsPanelRight,
-    InterfaceOptionsActionBarsPanelRightTwo,
-    InterfaceOptionsActionBarsPanelAlwaysShowActionBars,
+_G.ModernActionBar.optionButtons = {
+    _G.ReputationDetailMainScreenCheckBox,
+    _G.ReputationDetailInactiveCheckBox,
+    _G.InterfaceOptionsActionBarsPanelBottomLeft,
+    _G.InterfaceOptionsActionBarsPanelBottomRight,
+    _G.InterfaceOptionsActionBarsPanelRight,
+    _G.InterfaceOptionsActionBarsPanelRightTwo,
+    _G.InterfaceOptionsActionBarsPanelAlwaysShowActionBars,
 }
 
-function ModernActionBar:OnInitialize()
-    self.db = LibStub('AceDB-3.0')
-        :New(NAME..'DB', self.dbDefaults, true)
-
-    LibStub('AceConfig-3.0')
-        :RegisterOptionsTable(NAME, self.optionsTree, nil)
-
-    self.optionsFrame = CreateFrame('Frame', NAME..'Options', _G.UIParent)
-
-    -- self.optionsFrame = LibStub('AceConfigDialog-3.0')
-    --     :AddToBlizOptions(name, name)
+function _G.ModernActionBar:OnInitialize()
+    self.db = AceDB:New(NAME..'DB', self.dbDefaults, true)
+    AceConfig:RegisterOptionsTable(NAME, self.optionsTree, nil)
 
     self:RegisterChatCommand('mab', 'OpenInterfaceOptions')
     self:RegisterChatCommand('modernactionbar', 'OpenInterfaceOptions')
 end
 
-function ModernActionBar:OnEnable()
+function _G.ModernActionBar:OnEnable()
     self:RegisterEvent('PLAYER_ENTERING_WORLD')
     self:RegisterEvent('PLAYER_REGEN_ENABLED')
     self:RegisterEvent('PLAYER_REGEN_DISABLED')
 
     self:SecureHook('InterfaceOptionsOptionsFrame_RefreshCategories', function()
         if InCombatLockdown() then
-            InterfaceOptionsActionBarsPanelRightTwo:Disable()
+            _G.InterfaceOptionsActionBarsPanelRightTwo:Disable()
         end
     end)
 end
 
-function ModernActionBar:PLAYER_ENTERING_WORLD(isLogin, isReload)
+function _G.ModernActionBar:PLAYER_ENTERING_WORLD(isLogin, isReload)
     if isLogin or isReload then
         for index, frame in ipairs({
             _G.MainMenuBarPerformanceBarFrame,
@@ -240,7 +303,7 @@ function ModernActionBar:PLAYER_ENTERING_WORLD(isLogin, isReload)
     end
 end
 
-function ModernActionBar:PLAYER_REGEN_ENABLED()
+function _G.ModernActionBar:PLAYER_REGEN_ENABLED()
     if self.shouldOpenOptions then
         AceConfigDialog:Open(NAME)
     end
@@ -250,7 +313,7 @@ function ModernActionBar:PLAYER_REGEN_ENABLED()
     end
 end
 
-function ModernActionBar:PLAYER_REGEN_DISABLED()
+function _G.ModernActionBar:PLAYER_REGEN_DISABLED()
     if AceConfigDialog.OpenFrames[NAME] then
         AceConfigDialog:Close(NAME)
         self.shouldOpenOptions = true
@@ -261,12 +324,10 @@ function ModernActionBar:PLAYER_REGEN_DISABLED()
     end
 end
 
-function ModernActionBar:OpenInterfaceOptions()
+function _G.ModernActionBar:OpenInterfaceOptions()
     if InCombatLockdown() then
         self.shouldOpenOptions = true
     else
         AceConfigDialog:Open(NAME)
     end
-    -- InterfaceOptionsFrame_OpenToCategory(self.interfaceOptions)
-    -- InterfaceOptionsFrame_OpenToCategory(InterfaceOptionsActionBarsPanel)
 end

@@ -1,3 +1,8 @@
+local _G = getfenv(0)
+local CreateFrame = _G.CreateFrame
+local pairs = _G.pairs
+local ipairs = _G.ipairs
+
 local BagBar = _G.ModernActionBar:GetModule('BagBar')
 
 function BagBar:OnInitialize()
@@ -36,11 +41,11 @@ function BagBar:OnEnable()
         else
             button:SetSize(28, 28)
             button:SetPoint('BOTTOMRIGHT', self.buttons[index - 1], 'BOTTOMLEFT', -4, 0)
-            self:UpdateButtonStyle(button)
+            self:StyleButton(button)
 
-            button:GetNormalTexture():ClearAllPoints()
-            button:GetNormalTexture():SetPoint('TOPLEFT', -10, 10)
-            button:GetNormalTexture():SetPoint('BOTTOMRIGHT', 10, -10)
+            -- button:GetNormalTexture():ClearAllPoints()
+            -- button:GetNormalTexture():SetPoint('TOPLEFT', -10, 10)
+            -- button:GetNormalTexture():SetPoint('BOTTOMRIGHT', 10, -10)
         end
 
         button:Show()

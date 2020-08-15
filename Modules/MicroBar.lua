@@ -1,3 +1,8 @@
+local _G = getfenv(0)
+local CreateFrame = _G.CreateFrame
+local pairs = _G.pairs
+local ipairs = _G.ipairs
+
 local MicroBar = _G.ModernActionBar:GetModule('MicroBar')
 
 function MicroBar:OnInitialize()

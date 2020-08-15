@@ -1,4 +1,9 @@
 local NAME, _ = ...
+local _G = getfenv(0)
+local CreateFrame = _G.CreateFrame
+local InCombatLockdown = _G.InCombatLockdown
+local RegisterStateDriver = _G.RegisterStateDriver
+
 local PetBar = _G.ModernActionBar:GetModule('PetBar')
 
 function PetBar:OnInitialize()
@@ -23,7 +28,7 @@ function PetBar:OnEnable()
     local path = 'Interface\\AddOns\\'..NAME..'\\Textures\\Button\\'
 
     self:RegisterEvent('PLAYER_ENTERING_WORLD')
-    self:SecureHook('SetActionBarToggles', 'Update')
+    self:SecureHook('SetActionBarToggles', 'UpdatePosition')
 
     self:SecureHook('PetActionBar_Update', function()
         for index = 1, 10 do
@@ -31,9 +36,9 @@ function PetBar:OnEnable()
             local button = _G['PetActionButton'..index]
 
             if texture then
-                button:SetNormalTexture(path..'UI-Quickslot2.tga')
+                button:SetNormalTexture(path..'Normal.tga')
             else
-                button:SetNormalTexture(path..'UI-Quickslot.tga')
+                button:SetNormalTexture(path..'Floating.tga')
             end
         end
     end)
@@ -41,39 +46,38 @@ end
 
 function PetBar:PLAYER_ENTERING_WORLD(isLogin, isReload)
     if isLogin or isReload then
-        self:Update()
+        self:UpdateStyle()
+        self:UpdatePosition()
     end
 end
 
-function PetBar:Update()
+function PetBar:UpdateStyle()
+    self.frame:SetSize(10 * (30 + 6) - 6, 30)
+
+    for index = 1, 10 do
+        local button = _G['PetActionButton'..index]
+        button:SetParent(self.frame)
+        button:SetSize(30, 30)
+        button:ClearAllPoints()
+
+        if index == 1 then
+            button:SetPoint('LEFT')
+        else
+            button:SetPoint('LEFT', (index - 1) * (30 + 6), 0)
+        end
+
+        self:StyleButton(button)
+    end
+end
+
+function PetBar:UpdatePosition()
     if InCombatLockdown() then
         return
     end
 
-    if not self.frame.fixed then
-        self.frame:SetSize(10 * (30 + 6) - 6, 30)
-
-        for index = 1, 10 do
-            local button = _G['PetActionButton'..index]
-            button:SetParent(self.frame)
-            button:SetSize(30, 30)
-            button:ClearAllPoints()
-
-            if index == 1 then
-                button:SetPoint('LEFT')
-            else
-                button:SetPoint('LEFT', (index - 1) * (30 + 6), 0)
-            end
-
-            self:UpdateButtonStyle(button)
-        end
-
-        self.frame.fixed = true
-    end
-
     self.frame:ClearAllPoints()
 
-    if SHOW_MULTI_ACTIONBAR_1 then
+    if _G.SHOW_MULTI_ACTIONBAR_1 then
         self.frame:SetPoint('BOTTOMLEFT', _G.MultiBarBottomLeftButton1, 'TOPLEFT', 42, 6)
     else
         self.frame:SetPoint('BOTTOMLEFT', _G.ActionButton1, 'TOPLEFT', 42, 14)
