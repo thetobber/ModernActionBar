@@ -2,6 +2,7 @@ local _G = getfenv(0)
 local CreateFrame = _G.CreateFrame
 local InCombatLockdown = _G.InCombatLockdown
 local pairs = _G.pairs
+local match = _G.string.match
 
 local ActionBar = _G.ModernActionBar:GetModule('ActionBar')
 
@@ -25,6 +26,18 @@ function ActionBar:OnEnable()
     self:RegisterEvent('ACTIONBAR_HIDEGRID')
     self:SecureHook('SetActionBarToggles', 'UpdateActionBar')
     self:SecureHook('MainMenuBar_UpdateExperienceBars', 'UpdateWatchBar')
+
+    for i = 1, 6 do
+        local button = _G['MultiBarBottomRightButton'..i]
+
+        button:HookScript('OnReceiveDrag', function()
+            if button.eventsRegistered then
+                button:SetAlpha(1)
+            else
+                button:SetAlpha(0)
+            end
+        end)
+    end
 end
 
 function ActionBar:PLAYER_ENTERING_WORLD(isLogin, isReload)
@@ -48,12 +61,11 @@ function ActionBar:PLAYER_ENTERING_WORLD(isLogin, isReload)
             self:StyleButton(bottomRightButton)
 
             if index < 7 then
-                -- bottomRightButton:GetNormalTexture():SetAlpha(1)
                 bottomRightButton:SetPoint('BOTTOMLEFT', (index - 1) * 42, 0)
 
-                bottomRightButton:HookScript('OnReceiveDrag', function()
-                    self:ShowButtonGrid(bottomRightButton:GetName(), true)
-                end)
+                if not bottomRightButton.eventsRegistered then
+                    bottomRightButton:SetAlpha(0)
+                end
             else
                 bottomRightButton:SetPoint('TOPLEFT', (index - 7) * 42, 0)
             end
@@ -111,20 +123,30 @@ function ActionBar:PLAYER_ENTERING_WORLD(isLogin, isReload)
 end
 
 function ActionBar:ACTIONBAR_SHOWGRID()
-    self:ShowButtonGridRange('MultiBarBottomRightButton', 1, 6, true)
+    for i = 1, 6 do
+        _G['MultiBarBottomRightButton'..i]:SetAlpha(1)
+    end
 end
 
 function ActionBar:ACTIONBAR_HIDEGRID()
-    self:ShowButtonGridRange('MultiBarBottomRightButton', 1, 6, true)
+    for i = 1, 6 do
+        local button = _G['MultiBarBottomRightButton'..i]
+
+        if not button.eventsRegistered then
+            button:SetAlpha(0)
+        end
+    end
 end
 
 function ActionBar:ShowButtonGrid(name, show)
     local alpha = show and 1 or 0
 
-    _G[name..'HotKey']:SetAlpha(alpha)
-    _G[name..'Count']:SetAlpha(alpha)
-    _G[name..'Name']:SetAlpha(alpha)
-    _G[name..'Cooldown']:SetAlpha(alpha)
+    _G[name]:SetAlpha(alpha)
+
+    -- _G[name..'HotKey']:SetAlpha(alpha)
+    -- _G[name..'Count']:SetAlpha(alpha)
+    -- _G[name..'Name']:SetAlpha(alpha)
+    -- _G[name..'Cooldown']:SetAlpha(alpha)
 end
 
 function ActionBar:ShowButtonGridRange(baseName, from, to, show)

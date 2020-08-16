@@ -52,7 +52,7 @@ local function StyleButton(self, button)
         local name = button:GetName()
         local size = floor(button:GetSize())
 
-        button:GetNormalTexture():SetAlpha(0)
+        button:GetNormalTexture():SetScale(0.0001)
 
         button.NormalTex = button:CreateTexture(nil, 'ARTWORK')
         button.NormalTex:SetTexture(path..'Button\\Normal.tga')
@@ -104,8 +104,9 @@ local function StyleButton(self, button)
         if icon then
             icon:ClearAllPoints()
             icon:SetPoint('CENTER')
+            -- icon:SetAllPoints()
             icon:SetTexCoord(0.0625, 0.9375, 0.0625, 0.9375)
-            icon:SetSize(size - 4, size - 4)
+            icon:SetSize(size - 2, size - 2)
         end
 
         local floatingBg = _G[name..'FloatingBG']
