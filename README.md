@@ -16,6 +16,7 @@ Options:
 Restrictions:
  - Default interface option modifying the action bars are disabled during combat.
  - The addon's option UI is disabled during combat.
+ - Toggling of showing reputation watch bar during combat.
 
 ## Bug and feature requests
 You can submit issues and feature requests here: https://github.com/Rngzuz/ModernActionBar/issues
