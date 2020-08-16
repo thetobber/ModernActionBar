@@ -1,8 +1,9 @@
 ## Interface: 11305
 ## Author: Tobias
-## Version: 1.0.5
+## Version: 2.0.0
 ## Title: ModernActionBar
-## Notes: Restores the default retail layout of action bars, bag buttons and micro buttons, with minor modifications.
+## Notes: An action bar replacement that mimics the retail layout.
 ## DefaultState: enabled
+## SavedVariables: ModernActionBarDB
 
-ModernActionBar.lua
+Embeds.xml

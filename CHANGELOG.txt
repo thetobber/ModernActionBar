@@ -1,3 +1,30 @@
+2.0.0
+reworked addon using ace3 libraries
+dropped custom entries for UIPARENT_MANAGED_FRAME_POSITIONS due to tainting
+created upscaled action button textures
+created separated bag and micro bars
+added toggling of background and gryphons options for action bar
+added position, mouse over and enabling options for bag/micro bars
+added position option for vehicle leave button
+
 1.0.5
 changed to use UIPARENT_MANAGED_FRAME_POSITIONS to position pet/stance action bar
 removed pet/stance action bar art
+
+1.0.4
+restructured code
+added upscaled art textures
+fixed rep. bar positioning on rep. gain
+fixed max level textures showing some times
+
+1.0.3-release
+free bag slot count text added (shown by running '/run SetCVar("displayFreeBagSlots", "1")')
+
+1.0.2-release
+dumped version
+
+1.0.1-release
+updated packaging
+
+1.0.0-release
+initital release

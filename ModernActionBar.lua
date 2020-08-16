@@ -1,439 +1,334 @@
-local N, T = select(1, ...), 'Interface\\AddOns\\ModernActionBar\\Console.tga'
+local NAME, _ = ...
+local _G = getfenv(0)
+local CreateFrame = _G.CreateFrame
+local InCombatLockdown = _G.InCombatLockdown
+local ipairs = _G.ipairs
+local hooksecurefunc = _G.hooksecurefunc
+local floor = _G.floor
 
-UIPARENT_MANAGED_FRAME_POSITIONS['MultiBarBottomLeft'] = nil
+local AceAddon = _G.LibStub('AceAddon-3.0')
+local AceDB = _G.LibStub('AceDB-3.0')
+local AceConfig = _G.LibStub('AceConfig-3.0')
+local AceConfigDialog = _G.LibStub('AceConfigDialog-3.0')
 
-UIPARENT_MANAGED_FRAME_POSITIONS['PETACTIONBAR_YPOS'] = {
-    baseY = 98,
-    bottomLeft = 46,
-    justBottomRightAndStance = 46,
-    watchBar = 0,
-    maxLevel = 0,
-    isVar = 'yAxis',
-}
+local function EmptyFunc() end
 
-UIPARENT_MANAGED_FRAME_POSITIONS['StanceBarFrame'] = {
-    baseY = -2,
-    bottomLeft = 46,
-    watchBar = 0,
-    maxLevel = 0,
-    anchorTo = 'MainMenuBar',
-    point = 'BOTTOMLEFT',
-    rpoint = 'TOPLEFT',
-    xOffset = 30,
-}
-
-local function emptyFunc() end
-
-local function removeFrame(frame)
-    if type(frame) == 'table' and frame.SetScript then
-        frame:UnregisterAllEvents()
-        frame:SetScript('OnEvent', nil)
-        frame:SetScript('OnUpdate', nil)
-        frame:SetScript('OnShow', nil)
-        frame:SetScript('OnHide', nil)
-        frame:Hide()
-        frame.SetScript = emptyFunc
-        frame.RegisterEvent = emptyFunc
-        frame.RegisterAllEvents = emptyFunc
-        frame.Show = emptyFunc
-    end
+local function RemoveFrame(self, frame)
+    frame:UnregisterAllEvents()
+    frame:SetScript('OnEvent', nil)
+    frame:SetScript('OnUpdate', nil)
+    frame:SetScript('OnShow', nil)
+    frame:SetScript('OnHide', nil)
+    frame:Hide()
+    frame.SetScript = EmptyFunc
+    frame.RegisterEvent = EmptyFunc
+    frame.RegisterAllEvents = EmptyFunc
+    frame.Show = EmptyFunc
 end
 
-local function removeTexture(texture)
-    if type(texture) == 'table' and texture.SetTexture then
-        texture:SetTexture(nil)
-        texture:Hide()
-        texture.Show = emptyFunc
-    end
+local function RemoveTexture(self, texture)
+    texture:SetTexture(nil)
+    texture:Hide()
+    texture.Show = EmptyFunc
 end
 
-local unusedFrames = {
-    MainMenuBarPerformanceBarFrame,
-    MainMenuBarMaxLevelBar,
-}
-
-local unusedTextures = {
-    MainMenuBarTexture1,
-    MainMenuBarTexture2,
-    MainMenuBarTexture3,
-    MainMenuXPBarTexture0,
-    MainMenuXPBarTexture1,
-    MainMenuXPBarTexture2,
-    MainMenuXPBarTexture3,
-    ReputationWatchBar.StatusBar.WatchBarTexture0,
-    ReputationWatchBar.StatusBar.WatchBarTexture1,
-    ReputationWatchBar.StatusBar.WatchBarTexture2,
-    ReputationWatchBar.StatusBar.WatchBarTexture3,
-    ReputationWatchBar.StatusBar.XPBarTexture0,
-    ReputationWatchBar.StatusBar.XPBarTexture1,
-    ReputationWatchBar.StatusBar.XPBarTexture2,
-    ReputationWatchBar.StatusBar.XPBarTexture3,
-    MainMenuMaxLevelBar0,
-    MainMenuMaxLevelBar1,
-    MainMenuMaxLevelBar2,
-    MainMenuMaxLevelBar3,
-    MultiBarBottomRightButton1FloatingBG,
-    MultiBarBottomRightButton2FloatingBG,
-    MultiBarBottomRightButton3FloatingBG,
-    MultiBarBottomRightButton4FloatingBG,
-    MultiBarBottomRightButton5FloatingBG,
-    MultiBarBottomRightButton6FloatingBG,
-    StanceBarLeft,
-    StanceBarMiddle,
-    StanceBarRight,
-    SlidingActionBarTexture0,
-    SlidingActionBarTexture1,
-}
-
-local optionButtons = {
-    ReputationDetailMainScreenCheckBox,
-    ReputationDetailInactiveCheckBox,
-    InterfaceOptionsActionBarsPanelBottomLeft,
-    InterfaceOptionsActionBarsPanelBottomRight,
-    InterfaceOptionsActionBarsPanelRight,
-    InterfaceOptionsActionBarsPanelRightTwo,
-    InterfaceOptionsActionBarsPanelAlwaysShowActionBars,
-}
-
-local f1 = CreateFrame('Frame')
-f1:RegisterEvent('ADDON_LOADED')
-f1:RegisterEvent('PLAYER_ENTERING_WORLD')
-f1:RegisterEvent('ACTIONBAR_SHOWGRID')
-f1:RegisterEvent('ACTIONBAR_HIDEGRID')
-f1:RegisterEvent('PLAYER_REGEN_ENABLED')
-f1:RegisterEvent('PLAYER_REGEN_DISABLED')
-
-local function f1_fixStanceBtn(btn, xOffset, yOffset)
-    local texture = btn:GetNormalTexture()
-
-    btn:SetSize(30, 30)
-    btn:ClearAllPoints()
-    btn:SetPoint('LEFT', xOffset, yOffset)
-
-    texture:ClearAllPoints()
-    texture:SetPoint('TOPLEFT', btn, 'TOPLEFT', -10, 10)
-    texture:SetPoint('BOTTOMRIGHT', btn, 'BOTTOMRIGHT', 10, -10)
-end
-
-local function f1_setBtnVisible(name, visible)
-    local alpha = 0
-
-    if visible then
-        alpha = 1
-        _G[name..'NormalTexture']:SetAlpha(0.5)
+hooksecurefunc('ActionButton_UpdateRangeIndicator', function(self, checksRange, inRange)
+    if self.HotKey:GetText() == _G.RANGE_INDICATOR then
+        if checksRange and inRange then
+            self.HotKey:SetVertexColor(1, 1, 1, 1)
+        end
     else
-        _G[name..'NormalTexture']:SetAlpha(alpha)
-    end
-
-    _G[name..'HotKey']:SetAlpha(alpha)
-    _G[name..'Count']:SetAlpha(alpha)
-    _G[name..'Name']:SetAlpha(alpha)
-    _G[name..'Cooldown']:SetAlpha(alpha)
-end
-
-local function f1_setBtnGridVisible(visible)
-    for i = 1, 6 do
-        local name = 'MultiBarBottomRightButton'..i
-
-        if _G[name].eventsRegistered or visible then
-            f1_setBtnVisible(name, true)
+        if checksRange and not inRange then
+            self.HotKey:SetVertexColor(_G.RED_FONT_COLOR:GetRGB())
         else
-            f1_setBtnVisible(name, false)
+            self.HotKey:SetVertexColor(1, 1, 1, 1)
         end
-    end
-end
-
-local function f1_enableOptionButtons()
-    for i, btn in ipairs(optionButtons) do
-        btn:Enable()
-    end
-end
-
-local function f1_disableOptionButtons()
-    for i, btn in ipairs(optionButtons) do
-        btn:Disable()
-    end
-end
-
-local function f1_useSmallMainMenuBar()
-    if InCombatLockdown() then
-        return
-    end
-
-    MainMenuBar:SetSize(552, 70)
-    MainMenuBarTexture0:SetTexCoord(0, 0.5390625, 0.7265625, 1)
-end
-
-local function f1_useLargeMainMenuBar()
-    if InCombatLockdown() then
-        return
-    end
-
-    MainMenuBar:SetSize(806, 70)
-    MainMenuBarTexture0:SetTexCoord(0, 0.787109375, 0, 0.2734375)
-end
-
-local function f1_updateActionBars()
-    if InCombatLockdown() then
-        return
-    end
-
-    if SHOW_MULTI_ACTIONBAR_2 then
-        f1_useLargeMainMenuBar()
-    else
-        f1_useSmallMainMenuBar()
-    end
-end
-
-local function f1_updateWatchBars()
-    if InCombatLockdown() then
-        return
-    end
-
-    local showExp = MainMenuExpBar:IsShown()
-    local showRep = ReputationWatchBar:IsShown()
-
-    if showExp or showRep then
-        MainMenuBar:SetPoint('BOTTOM')
-
-        if showRep then
-            MainMenuExpBar:Hide()
-            MainMenuExpBar.pauseUpdates = true
-        elseif UnitLevel('player') < MAX_PLAYER_LEVEL then
-            MainMenuExpBar:Show()
-            MainMenuExpBar.pauseUpdates = nil
-        end
-    else
-        MainMenuBar:SetPoint('BOTTOM', 0, -16)
-    end
-end
-
-local function f1_onAddonLoaded(self, addonName)
-    if addonName == N then
-        ReputationWatchBar._SetPoint = ReputationWatchBar.SetPoint
-        ReputationWatchBar.SetPoint = function(self, ...)
-            self:SetSize(MainMenuBar:GetWidth(), 16)
-            self:ClearAllPoints()
-            self:_SetPoint('BOTTOMLEFT', MainMenuBar, 'BOTTOMLEFT')
-            self:_SetPoint('BOTTOMRIGHT', MainMenuBar, 'BOTTOMRIGHT')
-
-            self.StatusBar:ClearAllPoints()
-            self.StatusBar:SetAllPoints()
-        end
-
-        hooksecurefunc('SetActionBarToggles', f1_updateActionBars)
-        hooksecurefunc('MainMenuBar_UpdateExperienceBars', f1_updateWatchBars)
-        hooksecurefunc('InterfaceOptionsOptionsFrame_RefreshCategories', function()
-            if InCombatLockdown() then
-                f1_disableOptionButtons()
-            end
-        end)
-
-        self:UnregisterEvent('ADDON_LOADED')
-    end
-end
-
-local function f1_onPlayerEnteringWorld(isLogin, isReload)
-    if isLogin or isReload then
-        for _, frame in ipairs(unusedFrames) do
-            removeFrame(frame)
-        end
-
-        for _, texture in ipairs(unusedTextures) do
-            removeTexture(texture)
-        end
-
-        for i = 1, 12 do
-            local btn = _G['ActionButton'..i]
-
-            btn:ClearAllPoints()
-            btn:SetSize(36, 36)
-            btn:SetPoint('TOPLEFT', (i - 1) * 42 + 9, -14)
-        end
-
-        MultiBarBottomLeft:SetSize(498, 36)
-        for i = 1, 12 do
-            local btn = _G['MultiBarBottomLeftButton'..i]
-
-            btn:ClearAllPoints()
-            btn:SetSize(36, 36)
-            btn:SetPoint('LEFT', (i - 1) * 42, 0)
-        end
-
-        MultiBarBottomRight:ClearAllPoints()
-        MultiBarBottomRight:SetPoint('BOTTOMRIGHT', MainMenuBar, 'BOTTOMRIGHT', -8, 20)
-        MultiBarBottomRight:SetSize(246, 89)
-        for i = 1, 12 do
-            local btn = _G['MultiBarBottomRightButton'..i]
-
-            btn:ClearAllPoints()
-            btn:SetSize(36, 36)
-
-            if i < 7 then
-                removeTexture(_G['MultiBarBottomRightButton'..i..'FloatingBG'])
-                btn:SetPoint('BOTTOMLEFT', (i - 1) * 42, 0)
-                btn:GetNormalTexture():SetAlpha(1)
-
-                btn:HookScript('OnReceiveDrag', function()
-                    f1_setBtnVisible(btn:GetName(), true)
-                end)
-            else
-                btn:SetPoint('TOPLEFT', (i - 7) * 42, 0)
-            end
-        end
-        f1_setBtnGridVisible(false)
-
-        for i = 1, 12 do
-            _G['MultiBarLeftButton'..i]:SetSize(36, 36)
-            _G['MultiBarRightButton'..i]:SetSize(36, 36)
-        end
-
-        StanceBarFrame:SetSize(30, 30)
-        PetActionBarFrame:SetSize(30, 30)
-        for i = 1, 10 do
-            local xOffset = (i - 1) * 34
-            f1_fixStanceBtn(_G['StanceButton'..i], xOffset, 0)
-            f1_fixStanceBtn(_G['PetActionButton'..i], xOffset, 0)
-        end
-
-        MainMenuBarLeftEndCap:ClearAllPoints()
-        MainMenuBarLeftEndCap:SetPoint('BOTTOM', UIParent, 'BOTTOM')
-        MainMenuBarLeftEndCap:SetPoint('RIGHT', MainMenuBar, 'LEFT', 32, 0)
-        MainMenuBarLeftEndCap:SetSize(128, 77.5)
-        MainMenuBarLeftEndCap:SetTexture(T)
-        MainMenuBarLeftEndCap:SetTexCoord(0.56884765625, 0.6982421875, 0.697265625, 1)
-
-        MainMenuBarRightEndCap:ClearAllPoints()
-        MainMenuBarRightEndCap:SetPoint('BOTTOM', UIParent, 'BOTTOM')
-        MainMenuBarRightEndCap:SetPoint('LEFT', MainMenuBar, 'RIGHT', -32, 0)
-        MainMenuBarRightEndCap:SetSize(128, 77.5)
-        MainMenuBarRightEndCap:SetTexture(T)
-        MainMenuBarRightEndCap:SetTexCoord(0.56884765625, 0.6982421875, 0.39453125, 0.697265625)
-
-        MainMenuBarTexture0:SetAllPoints()
-        MainMenuBarTexture0:SetTexture(T)
-
-        MainMenuExpBar:SetHeight(16)
-        MainMenuExpBar:ClearAllPoints()
-        MainMenuExpBar:SetPoint('BOTTOMLEFT', MainMenuBar, 'BOTTOMLEFT')
-        MainMenuExpBar:SetPoint('BOTTOMRIGHT', MainMenuBar, 'BOTTOMRIGHT')
-
-        ActionBarUpButton:ClearAllPoints()
-        ActionBarUpButton:SetPoint('LEFT', MainMenuBar, 'LEFT', 506, 12)
-
-        ActionBarDownButton:ClearAllPoints()
-        ActionBarDownButton:SetPoint('LEFT', MainMenuBar, 'LEFT', 506, -7)
-
-        MainMenuBarPageNumber:SetSize(14, 14)
-        MainMenuBarPageNumber:ClearAllPoints()
-        MainMenuBarPageNumber:SetPoint('LEFT', MainMenuBar, 'LEFT', 534, 3)
-
-        UIParent_ManageFramePositions()
-        f1_updateActionBars()
-        f1_updateWatchBars()
-    end
-end
-
-f1:SetScript('OnEvent', function(self, event, ...)
-    if event == 'ADDON_LOADED' then
-        f1_onAddonLoaded(self, ...)
-    elseif event == 'PLAYER_ENTERING_WORLD' then
-        f1_onPlayerEnteringWorld(...)
-    elseif event == 'ACTIONBAR_SHOWGRID' then
-        f1_setBtnGridVisible(true)
-    elseif event == 'ACTIONBAR_HIDEGRID' then
-        f1_setBtnGridVisible(false)
-    elseif event == 'PLAYER_REGEN_DISABLED' then
-        f1_disableOptionButtons()
-    elseif event == 'PLAYER_REGEN_ENABLED' then
-        f1_enableOptionButtons()
     end
 end)
 
-local microButtons = {
-    CharacterMicroButton,
-    SpellbookMicroButton,
-    TalentMicroButton,
-    QuestLogMicroButton,
-    SocialsMicroButton,
-    WorldMapMicroButton,
-    MainMenuMicroButton,
-    HelpMicroButton,
-}
+local function StyleButton(self, button)
+    if not button.styled then
+        local path = 'Interface\\AddOns\\'..NAME..'\\Textures\\'
+        local name = button:GetName()
+        local size = floor(button:GetSize())
 
-local bagButtons = {
-    MainMenuBarBackpackButton,
-    KeyRingButton,
-    CharacterBag0Slot,
-    CharacterBag1Slot,
-    CharacterBag2Slot,
-    CharacterBag3Slot,
-}
+        button:GetNormalTexture():SetScale(0.0001)
 
-local f2 = CreateFrame('Frame', 'MicroAndBagsBar', UIParent)
-f2:RegisterEvent('ADDON_LOADED')
-f2:RegisterEvent('PLAYER_ENTERING_WORLD')
+        button.NormalTex = button:CreateTexture(nil, 'ARTWORK')
+        button.NormalTex:SetTexture(path..'Button\\Normal.tga')
+        button.NormalTex:SetAllPoints()
 
-local function f2_onAddonLoaded(self, addonName)
-    if addonName == N then
-        if GetCVar('displayFreeBagSlots') == '1' then
-            self:RegisterEvent('BAG_UPDATE')
+        button:SetPushedTexture(path..'Button\\Pushed.tga')
+        button:GetPushedTexture():ClearAllPoints()
+        button:GetPushedTexture():SetAllPoints()
+
+        button:SetHighlightTexture(path..'Button\\Highlight.tga')
+        button:GetHighlightTexture():ClearAllPoints()
+        button:GetHighlightTexture():SetAllPoints()
+
+        button:SetCheckedTexture(path..'Button\\Checked.tga')
+        button:GetCheckedTexture():ClearAllPoints()
+        button:GetCheckedTexture():SetAllPoints()
+
+        local flash = button.Flash
+        if flash then
+            flash:SetTexture(path..'Button\\Flash.tga')
+            flash:ClearAllPoints()
+            flash:SetAllPoints()
         end
 
-        self:UnregisterEvent('ADDON_LOADED')
+        local border = button.Border
+        if border then
+            border:SetTexture(path..'Button\\Border.tga')
+            border:ClearAllPoints()
+            border:SetAllPoints()
+        end
+
+        local autoCastable = _G[name..'AutoCastable'] or button.AutoCastable
+        if autoCastable then
+            autoCastable:SetTexture(path..'Button\\AutoCastable.tga')
+            autoCastable:ClearAllPoints()
+            autoCastable:SetAllPoints()
+        end
+
+        local cooldown = button.cooldown or button.Cooldown
+        if cooldown then
+            cooldown:SetSwipeTexture(path..'Button\\Swipe.tga')
+            cooldown:SetSwipeColor(0, 0, 0, 1)
+
+            cooldown:ClearAllPoints()
+            cooldown:SetAllPoints()
+        end
+
+        local icon = button.icon or button.Icon
+        if icon then
+            icon:ClearAllPoints()
+            icon:SetPoint('CENTER')
+            -- icon:SetAllPoints()
+            icon:SetTexCoord(0.0625, 0.9375, 0.0625, 0.9375)
+            icon:SetSize(size - 2, size - 2)
+        end
+
+        local floatingBg = _G[name..'FloatingBG']
+        if floatingBg then
+            floatingBg:SetTexture(path..'Button\\Floating.tga')
+            floatingBg:ClearAllPoints()
+            floatingBg:SetAllPoints()
+        end
+
+        local hotKey = button.HotKey
+        if hotKey then
+            hotKey:ClearAllPoints()
+            hotKey:SetDrawLayer('OVERLAY')
+            hotKey:SetFontObject('MAB_ButtonNormalFont')
+            hotKey:SetJustifyH('RIGHT')
+            hotKey:SetPoint('TOP')
+            hotKey:SetSize(size - 4, 16)
+        end
+
+        local count = button.Count
+        if count then
+            count:ClearAllPoints()
+            count:SetDrawLayer('OVERLAY')
+            count:SetFontObject('MAB_ButtonNormalFont')
+            count:SetJustifyH('RIGHT')
+            count:SetPoint('BOTTOM')
+            count:SetSize(size - 4, 16)
+        end
+
+        local macro = button.Name
+        if macro then
+            macro:ClearAllPoints()
+            macro:SetDrawLayer('OVERLAY')
+            macro:SetFontObject('MAB_ButtonNormalFont')
+            macro:SetJustifyH('LEFT')
+            macro:SetPoint('BOTTOM')
+            macro:SetSize(size - 4, 16)
+        end
+
+        button.styled = true
     end
 end
 
-local function f2_onPlayerEnteringWorld(self, isLogin, isReload)
+_G.ModernActionBar = AceAddon:NewAddon(NAME, 'AceConsole-3.0', 'AceHook-3.0', 'AceEvent-3.0')
+
+_G.ModernActionBar:NewModule(
+    'ActionBar',
+    { EmptyFunc = EmptyFunc, StyleButton = StyleButton },
+    'AceHook-3.0',
+    'AceEvent-3.0'
+)
+
+_G.ModernActionBar:NewModule(
+    'MicroBar',
+    'AceHook-3.0',
+    'AceEvent-3.0'
+)
+
+_G.ModernActionBar:NewModule(
+    'BagBar',
+    { EmptyFunc = EmptyFunc, StyleButton = StyleButton },
+    'AceHook-3.0',
+    'AceEvent-3.0'
+)
+
+_G.ModernActionBar:NewModule(
+    'StanceBar',
+    { EmptyFunc = EmptyFunc, RemoveTexture = RemoveTexture, StyleButton = StyleButton },
+    'AceHook-3.0',
+    'AceEvent-3.0'
+)
+
+_G.ModernActionBar:NewModule(
+    'PetBar',
+    { EmptyFunc = EmptyFunc, StyleButton = StyleButton },
+    'AceHook-3.0',
+    'AceEvent-3.0'
+)
+
+_G.ModernActionBar.optionsTree = {
+    name = name,
+    type = 'group',
+    args = {},
+}
+
+_G.ModernActionBar.dbDefaults = {
+    global = {
+        actionBar = {
+            background = true,
+            gryphons = true,
+            vehicleLeaveButton = {
+                anchor = 'BOTTOMLEFT',
+                xOffset = 362,
+                yOffset = 115,
+            }
+        },
+        bagBar = {
+            enabled = true,
+            mouseOver = false,
+            anchor = 'BOTTOMRIGHT',
+            xOffset = -2,
+            yOffset = 50,
+        },
+        microBar = {
+            enabled = true,
+            mouseOver = false,
+            anchor = 'BOTTOMRIGHT',
+            xOffset = -2,
+            yOffset = 2,
+        },
+    },
+}
+
+_G.ModernActionBar.optionButtons = {
+    _G.ReputationDetailMainScreenCheckBox,
+    _G.ReputationDetailInactiveCheckBox,
+    _G.InterfaceOptionsActionBarsPanelBottomLeft,
+    _G.InterfaceOptionsActionBarsPanelBottomRight,
+    _G.InterfaceOptionsActionBarsPanelRight,
+    _G.InterfaceOptionsActionBarsPanelRightTwo,
+    _G.InterfaceOptionsActionBarsPanelAlwaysShowActionBars,
+}
+
+function _G.ModernActionBar:OnInitialize()
+    self.db = AceDB:New(NAME..'DB', self.dbDefaults, true)
+    AceConfig:RegisterOptionsTable(NAME, self.optionsTree, nil)
+
+    self:RegisterChatCommand('mab', 'OpenInterfaceOptions')
+    self:RegisterChatCommand('modernactionbar', 'OpenInterfaceOptions')
+end
+
+function _G.ModernActionBar:OnEnable()
+    self:RegisterEvent('PLAYER_ENTERING_WORLD')
+    self:RegisterEvent('PLAYER_REGEN_ENABLED')
+    self:RegisterEvent('PLAYER_REGEN_DISABLED')
+
+    self:SecureHook('InterfaceOptionsOptionsFrame_RefreshCategories', function()
+        if InCombatLockdown() then
+            _G.InterfaceOptionsActionBarsPanelRightTwo:Disable()
+        end
+    end)
+end
+
+function _G.ModernActionBar:PLAYER_ENTERING_WORLD(isLogin, isReload)
     if isLogin or isReload then
-        self:SetSize(224, 92)
-        self:SetPoint('BOTTOMRIGHT')
-        self.Texture = self:CreateTexture(nil, 'BACKGROUND')
-        self.Texture:SetTexture(T)
-        self.Texture:SetAllPoints()
-        self.Texture:SetTexCoord(0.78125, 1, 0.640625, 1)
-
-        for index, button in ipairs(microButtons) do
-            button:ClearAllPoints()
-
-            if index == 1 then
-                button:SetPoint('BOTTOMLEFT', self, 'BOTTOMLEFT', 8, 3)
-            else
-                button:SetPoint('LEFT', microButtons[index - 1], 'RIGHT', -3, 0)
-            end
+        for index, frame in ipairs({
+            _G.MainMenuBarPerformanceBarFrame,
+            _G.MainMenuBarMaxLevelBar
+        }) do
+            RemoveFrame(self, frame)
         end
 
-        for index, button in ipairs(bagButtons) do
-            button:ClearAllPoints()
+        for index, texture in ipairs({
+            _G.MainMenuBarTexture1,
+            _G.MainMenuBarTexture2,
+            _G.MainMenuBarTexture3,
+            _G.MainMenuXPBarTexture0,
+            _G.MainMenuXPBarTexture1,
+            _G.MainMenuXPBarTexture2,
+            _G.MainMenuXPBarTexture3,
+            _G.ReputationWatchBar.StatusBar.WatchBarTexture0,
+            _G.ReputationWatchBar.StatusBar.WatchBarTexture1,
+            _G.ReputationWatchBar.StatusBar.WatchBarTexture2,
+            _G.ReputationWatchBar.StatusBar.WatchBarTexture3,
+            _G.ReputationWatchBar.StatusBar.XPBarTexture0,
+            _G.ReputationWatchBar.StatusBar.XPBarTexture1,
+            _G.ReputationWatchBar.StatusBar.XPBarTexture2,
+            _G.ReputationWatchBar.StatusBar.XPBarTexture3,
+            _G.MainMenuMaxLevelBar0,
+            _G.MainMenuMaxLevelBar1,
+            _G.MainMenuMaxLevelBar2,
+            _G.MainMenuMaxLevelBar3,
+            _G.MultiBarBottomRightButton1FloatingBG,
+            _G.MultiBarBottomRightButton2FloatingBG,
+            _G.MultiBarBottomRightButton3FloatingBG,
+            _G.MultiBarBottomRightButton4FloatingBG,
+            _G.MultiBarBottomRightButton5FloatingBG,
+            _G.MultiBarBottomRightButton6FloatingBG,
+            _G.StanceBarLeft,
+            _G.StanceBarMiddle,
+            _G.StanceBarRight,
+            _G.SlidingActionBarTexture0,
+            _G.SlidingActionBarTexture1,
+        }) do
+            RemoveTexture(self, texture)
+        end
 
-            if index == 1 then
-                button:SetPoint('BOTTOMRIGHT', self, 'BOTTOMRIGHT', -7, 47)
-            elseif index == 2 then
-                button:SetSize(14, 28)
-                button:SetPoint('BOTTOMRIGHT', bagButtons[index - 1], 'BOTTOMLEFT', -6, 0)
-            else
-                button:SetSize(28, 28)
-                button:SetPoint('BOTTOMRIGHT', bagButtons[index - 1], 'BOTTOMLEFT', -4, 0)
+        if not self.db.global.bagBar.enabled then
+            self:DisableModule('BagBar')
+        end
 
-                local normalTexture = button:GetNormalTexture()
-                normalTexture:ClearAllPoints()
-                normalTexture:SetPoint('TOPLEFT', button, 'TOPLEFT', -10, 10)
-                normalTexture:SetPoint('BOTTOMRIGHT', button, 'BOTTOMRIGHT', 10, -10)
-            end
+        if not self.db.global.microBar.enabled then
+            self:DisableModule('MicroBar')
         end
     end
 end
 
-local function f2_onBagUpdate()
-    MainMenuBarBackpackButtonCount:SetText(string.format('(%s)', MainMenuBarBackpackButton.freeSlots))
+function _G.ModernActionBar:PLAYER_REGEN_ENABLED()
+    if self.shouldOpenOptions then
+        AceConfigDialog:Open(NAME)
+    end
+
+    for index, button in ipairs(self.optionButtons) do
+        button:Enable()
+    end
 end
 
-f2:SetScript('OnEvent', function(self, event, ...)
-    if event == 'ADDON_LOADED' then
-        f2_onAddonLoaded(self, ...)
-    elseif event == 'PLAYER_ENTERING_WORLD' then
-        f2_onPlayerEnteringWorld(self, ...)
-    elseif event == 'BAG_UPDATE' then
-        f2_onBagUpdate()
+function _G.ModernActionBar:PLAYER_REGEN_DISABLED()
+    if AceConfigDialog.OpenFrames[NAME] then
+        AceConfigDialog:Close(NAME)
+        self.shouldOpenOptions = true
     end
-end)
+
+    for index, button in ipairs(self.optionButtons) do
+        button:Disable()
+    end
+end
+
+function _G.ModernActionBar:OpenInterfaceOptions()
+    if InCombatLockdown() then
+        self.shouldOpenOptions = true
+    else
+        AceConfigDialog:Open(NAME)
+    end
+end
